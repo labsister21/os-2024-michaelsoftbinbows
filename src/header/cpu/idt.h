@@ -55,8 +55,9 @@ struct IDTGate {
  *
  * ...
  */
-// TODO : Implement
-// ...
+struct InterruptDescriptorTable{
+    struct IDTGate table[IDT_MAX_ENTRY_COUNT];
+} __attribute__((packed));
 
 /**
  * IDTR, carrying information where's the IDT located and size.
@@ -64,8 +65,10 @@ struct IDTGate {
  *
  * ...
  */
-// TODO : Implement
-// ...
+struct IDTR{
+    uint16_t                     size;
+    struct InterruptDescriptorTable *address;
+} __attribute__((packed));
 
 
 
