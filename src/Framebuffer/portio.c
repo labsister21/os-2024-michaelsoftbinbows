@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "header/cpu/portio.h"
+#include "../header/cpu/portio.h"
 
 /** x86 inb/outb:
  * @param dx target port 

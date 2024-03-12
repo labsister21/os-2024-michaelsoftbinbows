@@ -45,12 +45,4 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c);
  */
 void framebuffer_clear(void);
 
-/**
- * Convert row and col to position
- * using resolution: 80x25
- * @param r row
- * @param c column
- */
-int framebuffer_position(uint8_t r, uint8_t c);
-
 #endif
