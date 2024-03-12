@@ -6,17 +6,6 @@
 #include "header/text/framebuffer.h"
 #include <stdbool.h>
 
-// Yg delay ini boleh dihapus, cuma buat testing
-void delay(int count) {
-    volatile int i;
-    volatile int j;
-    for (i = 0; i < INT8_MAX*count; i++) {
-        for(j=0;j<count;j++){
-
-        }
-    }
-}
-
 void kernel_setup(void) {
     load_gdt(&_gdt_gdtr);
     pic_remap();
