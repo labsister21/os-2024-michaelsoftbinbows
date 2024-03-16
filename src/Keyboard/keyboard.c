@@ -5,6 +5,11 @@
 
 static struct KeyboardDriverState keyboard_state;
 
+int cursorRow = 0;
+int cursorColumn =0;
+
+
+
 const char keyboard_scancode_1_to_ascii_map[256] = {
       0, 0x1B, '1', '2', '3', '4', '5', '6',  '7', '8', '9',  '0',  '-', '=', '\b', '\t',
     'q',  'w', 'e', 'r', 't', 'y', 'u', 'i',  'o', 'p', '[',  ']', '\n',   0,  'a',  's',
@@ -34,9 +39,21 @@ void keyboard_isr(void) {
     pic_ack(IRQ_KEYBOARD);
     return;
   }
-
-  keyboard_state.keyboard_buffer = key;
-
+  
+  else if (key == '\b')
+  {
+    framebuffer_write(cursorRow, cursorColumn-1, ' ', 0xF, 0x0);
+    framebuffer_set_cursor(cursorRow,cursorColumn-1);
+    cursorColumn--;
+    
+  }
+  else{
+    framebuffer_set_cursor(cursorRow,cursorColumn+1);
+    keyboard_state.keyboard_buffer = key;
+    cursorColumn++;
+  }
+  
+  
   pic_ack(IRQ_KEYBOARD);
 }
 
