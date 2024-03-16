@@ -2,6 +2,7 @@
     "debug.onTaskErrors": "debugAnyway",
     "files.associations": {
         "portio.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "interrupt.h": "c"
     },
 }

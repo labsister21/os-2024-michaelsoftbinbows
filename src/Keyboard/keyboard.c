@@ -26,8 +26,18 @@ const char keyboard_scancode_1_to_ascii_map[256] = {
 };
 
 void keyboard_isr(void) {
-    // uint8_t scancode = in(KEYBOARD_DATA_PORT);
-    // TODO : Implement scancode processing
+  uint8_t scancode = in(KEYBOARD_DATA_PORT);
+   
+  char key = keyboard_scancode_1_to_ascii_map[scancode];
+
+  if (key == 0) {
+    pic_ack(IRQ_KEYBOARD);
+    return;
+  }
+
+  keyboard_state.keyboard_buffer = key;
+
+  pic_ack(IRQ_KEYBOARD);
 }
 
 // Activate keyboard ISR / start listen keyboard & save to buffer
@@ -43,5 +53,5 @@ void keyboard_state_deactivate(void) {
 // Get keyboard buffer value and flush the buffer - @param buf Pointer to char buffer
 void get_keyboard_buffer(char *buf) {
   *buf = keyboard_state.keyboard_buffer;
-  // keyboard_buffer dikosongkan juga(?)
+  keyboard_state.keyboard_buffer = '\0';
 }

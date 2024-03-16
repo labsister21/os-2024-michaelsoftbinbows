@@ -13,14 +13,6 @@ void kernel_setup(void) {
     initialize_idt();
     activate_keyboard_interrupt();
     framebuffer_clear();
-    framebuffer_set_cursor(0, 11);
-    __asm__("int $0x4");
-
-    load_gdt(&_gdt_gdtr);
-    pic_remap();
-    initialize_idt();
-    activate_keyboard_interrupt();
-    framebuffer_clear();
     framebuffer_set_cursor(0, 0);
         
     int col = 0;
