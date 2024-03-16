@@ -42,10 +42,15 @@ void keyboard_isr(void) {
   
   else if (key == '\b')
   {
-    framebuffer_write(cursorRow, cursorColumn-1, ' ', 0xF, 0x0);
-    framebuffer_set_cursor(cursorRow,cursorColumn-1);
-    cursorColumn--;
-    
+    if (cursorColumn > 0) {
+      framebuffer_write(cursorRow, cursorColumn-1, ' ', 0xF, 0x0);
+      framebuffer_set_cursor(cursorRow,cursorColumn-1);
+      cursorColumn--;
+    }
+  }
+  else if (key == '\n'){
+    cursorColumn = (cursorColumn+80)-(cursorColumn+80)%80;
+    framebuffer_set_cursor(cursorRow,cursorColumn);
   }
   else{
     framebuffer_set_cursor(cursorRow,cursorColumn+1);
