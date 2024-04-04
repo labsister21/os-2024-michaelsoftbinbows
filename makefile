@@ -28,7 +28,7 @@ run: all
 all: build
 build: iso
 clean:
-	rm -rf *.o *.iso $(OUTPUT_FOLDER)/*
+	rm -rf *.o *.iso $(OUTPUT_FOLDER)/*.iso $(OUTPUT_FOLDER)/*.o
 
 
 
