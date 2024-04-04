@@ -44,29 +44,30 @@ void kernel_setup(void) {
     memset(b.buf, 0, BLOCK_SIZE);
     b.buf[0] = 'D';
     b.buf[1] = 'E';
+    b.buf[2] = 'F';
+    b.buf[3] = 'O';
 
     //write_blocks(&comm, 1024, 1);
     memcpy(k.ext, "BB", 3);
+
+    k.buffer_size = 4;
     
     comm.buf[1] = write(k);
-    write_blocks(&comm, 1024, 1);
 
-    struct FAT32DirectoryTable ftbl = {};
 
-    struct FAT32DriverRequest drq = {};
+    struct ClusterBuffer res = {};
 
-    drq.buf = &ftbl;
-    memcpy(drq.name, "tes\0\0\0\0", 8);
-    drq.parent_cluster_number = 2;
-    drq.buffer_size = sizeof(struct FAT32DirectoryTable);
+    k.buf = &res;
 
-    comm.buf[0] = read_directory(drq);
+    k.buffer_size = CLUSTER_SIZE;
 
-    memcpy(ftbl.table[0].name, "UWU\0\0\0\0", 8);
+    comm.buf[2] = read(k);
 
-    write_clusters(&ftbl, 1024, 1);
+    res.buf[3] = 'A';
 
-    write_blocks(comm.buf, 512, 1);
+    write_clusters(res.buf, 1024, 1);
+
+    write_blocks(&comm, 512, 1);
 
     end_filesystem_fat32();
 
