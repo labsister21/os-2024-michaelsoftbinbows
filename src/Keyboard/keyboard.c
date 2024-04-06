@@ -5,10 +5,6 @@
 
 static struct KeyboardDriverState keyboard_state;
 
-int cursorRow = 0;
-int cursorColumn =0;
-
-
 
 const char keyboard_scancode_1_to_ascii_map[256] = {
       0, 0x1B, '1', '2', '3', '4', '5', '6',  '7', '8', '9',  '0',  '-', '=', '\b', '\t',
@@ -42,20 +38,34 @@ void keyboard_isr(void) {
   
   else if (key == '\b')
   {
-    if (cursorColumn > 0) {
-      framebuffer_write(cursorRow, cursorColumn-1, ' ', 0xF, 0x0);
-      framebuffer_set_cursor(cursorRow,cursorColumn-1);
-      cursorColumn--;
+    if (keyboard_state.cursorColumn > 0) {
+      framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn-1, ' ', 0xF, 0x0);
+      framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn-1);
+      keyboard_state.cursorColumn--;
+      if(keyboard_state.cursorColumn==0){
+        keyboard_state.cursorRow+=24;
+        keyboard_state.cursorRow %=25;
+        keyboard_state.cursorColumn = 80;
+      }
     }
   }
   else if (key == '\n'){
-    cursorColumn = (cursorColumn+80)-(cursorColumn+80)%80;
-    framebuffer_set_cursor(cursorRow,cursorColumn);
+    keyboard_state.cursorRow++ ;
+    keyboard_state.cursorRow %=25;
+    keyboard_state.cursorColumn = 0;
+    framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn);
   }
   else{
-    framebuffer_set_cursor(cursorRow,cursorColumn+1);
+    framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
     keyboard_state.keyboard_buffer = key;
-    cursorColumn++;
+    keyboard_state.cursorColumn++;
+    if(keyboard_state.cursorColumn==81){
+      keyboard_state.cursorRow++;
+      keyboard_state.cursorColumn = 1;
+      if(keyboard_state.cursorRow==25){
+        keyboard_state.cursorRow=0;
+      }
+    }
   }
   
   
@@ -76,4 +86,12 @@ void keyboard_state_deactivate(void) {
 void get_keyboard_buffer(char *buf) {
   *buf = keyboard_state.keyboard_buffer;
   keyboard_state.keyboard_buffer = '\0';
+}
+
+int get_keyboard_col(){
+  return (keyboard_state.cursorColumn);
+}
+
+int get_keyboard_row(){
+  return (keyboard_state.cursorRow);
 }
