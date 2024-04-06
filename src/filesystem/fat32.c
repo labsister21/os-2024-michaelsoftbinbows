@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include "../header/stdlib/string.h"
 #include "../header/filesystem/fat32.h"
+#include "../header/stdlib/string.h"
 
 const uint8_t fs_signature[BLOCK_SIZE] = {
     'C', 'o', 'u', 'r', 's', 'e', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',  ' ',
@@ -13,7 +14,7 @@ const uint8_t fs_signature[BLOCK_SIZE] = {
     [BLOCK_SIZE-2] = 'O',
     [BLOCK_SIZE-1] = 'k',
 };
-
+/*
 int memcmp (const void *str1, const void *str2, size_t count)
 {
   register const unsigned char *s1 = (const unsigned char*)str1;
@@ -42,7 +43,7 @@ void *memcpy (void *dest, const void *src, size_t len)
   while (len--)
     *d++ = *s++;
   return dest;
-}
+}*/
 
 static struct FAT32DriverState fat32_driver = {};
 

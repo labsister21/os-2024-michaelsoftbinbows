@@ -250,10 +250,12 @@ int8_t delete(struct FAT32DriverRequest request);
 
 void end_filesystem_fat32(void);
 
+/*
+
 int memcmp (const void *str1, const void *str2, size_t count);
 
 void *memset (void *dest, register int val, register size_t len);
 
-void *memcpy (void *dest, const void *src, size_t len);
+void *memcpy (void *dest, const void *src, size_t len); */
 
 #endif
