@@ -1,7 +1,8 @@
 {
     "debug.onTaskErrors": "debugAnyway",
     "files.associations": {
-        "idt.h": "c",
-        "string.h": "c"
+        "portio.h": "c",
+        "string.h": "c",
+        "interrupt.h": "c"
     },
 }
