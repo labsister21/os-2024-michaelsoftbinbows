@@ -26,6 +26,20 @@ const char keyboard_scancode_1_to_ascii_map[256] = {
       0,    0,   0,   0,   0,   0,   0,   0,    0,   0,   0,    0,    0,   0,    0,    0,
 };
 
+void cursorFixFwd(void){
+  keyboard_state.cursorRow = (keyboard_state.cursorRow+(keyboard_state.cursorColumn/80))%25;
+  keyboard_state.cursorColumn %= 80;
+}
+
+void cursorFixBck(void){
+  if(keyboard_state.cursorColumn==0){
+    keyboard_state.cursorColumn = 80;
+    keyboard_state.cursorRow--;
+    keyboard_state.cursorRow += 25;
+    keyboard_state.cursorRow %= 25;
+  }
+}
+
 void keyboard_isr(void) {
   uint8_t scancode = in(KEYBOARD_DATA_PORT);
    
@@ -38,34 +52,25 @@ void keyboard_isr(void) {
   
   else if (key == '\b')
   {
-    if (keyboard_state.cursorColumn > 0) {
-      framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn-1, ' ', 0xF, 0x0);
-      framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn-1);
-      keyboard_state.cursorColumn--;
-      if(keyboard_state.cursorColumn==0){
-        keyboard_state.cursorRow+=24;
-        keyboard_state.cursorRow %=25;
-        keyboard_state.cursorColumn = 80;
-      }
-    }
+    cursorFixBck();
+    framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn-1, ' ', 0xF, 0x0);
+    framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn-1);
+    keyboard_state.cursorColumn--;
+    
   }
+
   else if (key == '\n'){
+    cursorFixFwd();
     keyboard_state.cursorRow++ ;
-    keyboard_state.cursorRow %=25;
     keyboard_state.cursorColumn = 0;
     framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn);
   }
+
   else{
+    cursorFixFwd();
     framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
     keyboard_state.keyboard_buffer = key;
     keyboard_state.cursorColumn++;
-    if(keyboard_state.cursorColumn==81){
-      keyboard_state.cursorRow++;
-      keyboard_state.cursorColumn = 1;
-      if(keyboard_state.cursorRow==25){
-        keyboard_state.cursorRow=0;
-      }
-    }
   }
   
   

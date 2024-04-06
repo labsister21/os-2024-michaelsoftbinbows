@@ -31,8 +31,8 @@ extern const char keyboard_scancode_1_to_ascii_map[256];
  * @param keyboard_buffer    Storing keyboard input values in ASCII
  */
 struct KeyboardDriverState {
-    uint8_t cursorRow;
-    uint8_t cursorColumn;
+    int8_t cursorRow;
+    int8_t cursorColumn;
     bool read_extended_mode;
     bool keyboard_input_on;
     char keyboard_buffer;
@@ -60,5 +60,9 @@ void keyboard_isr(void);
 int get_keyboard_col(void);
 
 int get_keyboard_row(void);
+
+void cursorFixBck(void);
+
+void cursorFixFwd(void);
 
 #endif
