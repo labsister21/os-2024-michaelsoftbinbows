@@ -14,8 +14,6 @@
 #define KEYBOARD_DATA_PORT     0x60
 #define EXTENDED_SCANCODE_BYTE 0xE0
 
-extern int cursorRow;
-extern int cursorColumn;
 
 /**
  * keyboard_scancode_1_to_ascii_map[256], Convert scancode values that correspond to ASCII printables
@@ -33,6 +31,8 @@ extern const char keyboard_scancode_1_to_ascii_map[256];
  * @param keyboard_buffer    Storing keyboard input values in ASCII
  */
 struct KeyboardDriverState {
+    int8_t cursorRow;
+    int8_t cursorColumn;
     bool read_extended_mode;
     bool keyboard_input_on;
     char keyboard_buffer;
@@ -56,5 +56,13 @@ void get_keyboard_buffer(char *buf);
  * Will start listen and process keyboard scancode if keyboard_input_on.
  */
 void keyboard_isr(void);
+
+int get_keyboard_col(void);
+
+int get_keyboard_row(void);
+
+void cursorFixBck(void);
+
+void cursorFixFwd(void);
 
 #endif

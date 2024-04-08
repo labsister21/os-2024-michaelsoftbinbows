@@ -102,7 +102,7 @@ void kernel_setup(void) {
             res.buf[y] = c;
             y++;
             write_clusters(res.buf, 512, 1);
-            framebuffer_write(cursorRow, cursorColumn-1, c, 0xF, 0);
+            framebuffer_write(get_keyboard_row(), get_keyboard_col()-1, c, 0xF, 0);
          }
          if(breakNow) break;
     }
