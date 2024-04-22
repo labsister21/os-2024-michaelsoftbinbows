@@ -48,3 +48,30 @@ void activate_keyboard_interrupt(void) {
     out(PIC1_DATA, in(PIC1_DATA) & ~(1 << IRQ_KEYBOARD));
 }
 
+void syscall(struct InterruptFrame frame) {
+    switch (frame.cpu.general.eax) {
+        case 0:
+            *((int8_t*) frame.cpu.general.ecx) = read(
+                *(struct FAT32DriverRequest*) frame.cpu.general.ebx
+            );
+            break;
+        case 4:
+            get_keyboard_buffer((char*) frame.cpu.general.ebx);
+            break;
+        case 6:
+            puts(
+                (char*) frame.cpu.general.ebx, 
+                frame.cpu.general.ecx, 
+                frame.cpu.general.edx
+            ); // Assuming puts() exist in kernel
+            /* 
+            TODO
+            Modify/overload puts() menggunakan framebuffer yang telah dibuat sebelumnya. 
+            Sesuaikan kode diatas dengan kebutuhan atau implementasi yang telah dibuat sebelumnya
+            */
+            break;
+        case 7: 
+            keyboard_state_activate();
+            break;
+    }
+}
