@@ -1,19 +1,24 @@
 #include "../header/cpu/interrupt.h"
 #include "../header/cpu/portio.h"
 #include "../header/driver/keyboard.h"
+#include "../header/cpu/gdt.h"
 
-void io_wait(void) {
+void io_wait(void)
+{
     out(0x80, 0);
 }
 
-void pic_ack(uint8_t irq) {
-    if (irq >= 8) out(PIC2_COMMAND, PIC_ACK);
+void pic_ack(uint8_t irq)
+{
+    if (irq >= 8)
+        out(PIC2_COMMAND, PIC_ACK);
     out(PIC1_COMMAND, PIC_ACK);
 }
 
-void pic_remap(void) {
+void pic_remap(void)
+{
     // Starts the initialization sequence in cascade mode
-    out(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4); 
+    out(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
     io_wait();
     out(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
     io_wait();
@@ -36,15 +41,18 @@ void pic_remap(void) {
     out(PIC2_DATA, PIC_DISABLE_ALL_MASK);
 }
 
-void main_interrupt_handler(struct InterruptFrame frame) {
-    switch (frame.int_number) {
-        case (0x21):
-           keyboard_isr();
-           break;
+void main_interrupt_handler(struct InterruptFrame frame)
+{
+    switch (frame.int_number)
+    {
+    case (0x21):
+        keyboard_isr();
+        break;
     }
 }
 
-void activate_keyboard_interrupt(void) {
+void activate_keyboard_interrupt(void)
+{
     out(PIC1_DATA, in(PIC1_DATA) & ~(1 << IRQ_KEYBOARD));
 }
 
