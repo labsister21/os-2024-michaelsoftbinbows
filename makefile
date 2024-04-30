@@ -50,6 +50,8 @@ kernel:
 
 	@$(CC) $(CFLAGS) $(SOURCE_FOLDER)/Keyboard/keyboard.c -o $(OUTPUT_FOLDER)/keyboard.o
 
+	@$(CC) $(CFLAGS) $(SOURCE_FOLDER)/Paging/paging.c -o $(OUTPUT_FOLDER)/paging.o
+
 	@$(LIN) $(LFLAGS) bin/*.o -o $(OUTPUT_FOLDER)/kernel
 	@echo Linking object files and generate elf32...
 	@rm -f *.o
