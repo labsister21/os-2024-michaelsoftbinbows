@@ -8,6 +8,7 @@
 struct GlobalDescriptorTable global_descriptor_table = {
     .table = {
         {
+            // NULL DESCRIPTOR
             0, // segment low
             0, // Base low
             0, // base mid
@@ -24,6 +25,7 @@ struct GlobalDescriptorTable global_descriptor_table = {
 
         },
         {
+            // KERNEL CODE DESCRIPTOR
             0xFFFF, // segment low
             0,      // Base low
             0,      // base mid
@@ -39,6 +41,7 @@ struct GlobalDescriptorTable global_descriptor_table = {
             0,      // base high
         },
         {
+            // KERNEL DATA DESCRIPTOR
             0xFFFF, // segment low
             0,      // Base low
             0,      // base mid
@@ -52,7 +55,63 @@ struct GlobalDescriptorTable global_descriptor_table = {
             1,      // default operation
             1,      // granularity
             0,      // base high
-        }}};
+        },
+        {
+            // USER CODE DESCRIPTOR
+            0xFFFF, // segment low
+            0,      // Base low
+            0,      // base mid
+            0b1010, // type bit
+            1,      // non system
+            0b11,   // descriptor privilege
+            1,      // segment present
+            0xF,    // segment limit
+            0,      // available
+            0,      // long code seg
+            1,      // default operation
+            1,      // granularity
+            0,      // base high
+        },
+        {
+            // USER DATA DESCRIPTOR
+            0xFFFF, // segment low
+            0,      // Base low
+            0,      // base mid
+            0b0010, // type bit
+            1,      // non system
+            0b11,   // descriptor privilege
+            1,      // segment present
+            0xF,    // segment limit
+            0,      // available
+            0,      // long code seg
+            1,      // default operation
+            1,      // granularity
+            0,      // base high
+        },
+        {
+            .segment_low = sizeof(struct TSSEntry),
+            .base_low = 0,
+            .base_mid = 0,
+            .type_bit = 0x9,
+            .non_system = 0,
+            .descriptor_privilege = 0,
+            .segment_present = 1,
+            .segment_limit = (sizeof(struct TSSEntry) & (0xF << 16)) >> 16,
+            .default_operation = 1,
+            .long_code_seg = 0,
+            .granularity = 0,
+            // 0,
+            // 0,
+            // 0,
+            // 0, // S bit
+            // 0x9,
+            // 0, // DPL
+            // 1, // P bit
+            // 1, // D/B bit
+            // 0, // L bit
+            // 0, // G bit
+        },
+        {0}}};
 
 /**
  * _gdt_gdtr, predefined system GDTR.
@@ -61,3 +120,11 @@ struct GlobalDescriptorTable global_descriptor_table = {
  */
 struct GDTR _gdt_gdtr = {
     sizeof(global_descriptor_table) - 1, &global_descriptor_table};
+
+void gdt_install_tss(void)
+{
+    uint32_t base = (uint32_t)&_interrupt_tss_entry;
+    global_descriptor_table.table[5].base_high = (base & (0xFF << 24)) >> 24;
+    global_descriptor_table.table[5].base_mid = (base & (0xFF << 16)) >> 16;
+    global_descriptor_table.table[5].base_low = base & 0xFFFF;
+}
