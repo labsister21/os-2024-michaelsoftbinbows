@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "../header/filesystem/disk.h"
-#include "../header/filesystem/disk.h"
 
 static void ATA_busy_wait() {
     while (in(0x1F7) & ATA_STATUS_BSY);
