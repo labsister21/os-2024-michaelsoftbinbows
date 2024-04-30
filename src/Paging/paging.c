@@ -14,7 +14,7 @@ __attribute__((aligned(0x1000))) struct PageDirectory _paging_kernel_page_direct
         [0x300] = {
             .flag.present_bit       = 1,
             .flag.read_write        = 1,
-            .flag.page_size   = 1,
+            .flag.page_size         = 1,
             .lower_address          = 0,
         },
     }

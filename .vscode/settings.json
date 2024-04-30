@@ -1,8 +1,11 @@
 {
     "debug.onTaskErrors": "debugAnyway",
     "files.associations": {
+        "*.c": "c",
         "portio.h": "c",
         "string.h": "c",
-        "interrupt.h": "c"
+        "interrupt.h": "c",
+        "gdt.h": "c",
+        "paging.h": "c"
     },
 }
