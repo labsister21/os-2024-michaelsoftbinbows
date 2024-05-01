@@ -92,10 +92,3 @@ iso: kernel
 	-o $(OUTPUT_FOLDER)/os2024.iso              \
 	$(OUTPUT_FOLDER)/iso
 	@rm -r $(OUTPUT_FOLDER)/iso/
-
-inserter:
-	@$(CC) -Wno-builtin-declaration-mismatch -g -I$(SOURCE_FOLDER) \
-		$(SOURCE_FOLDER)/stdlib/string.c \
-		$(SOURCE_FOLDER)/filesystem/fat32.c \
-		$(SOURCE_FOLDER)/external/external-inserter.c \
-		-o $(OUTPUT_FOLDER)/inserter
