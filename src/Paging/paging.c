@@ -8,13 +8,13 @@ __attribute__((aligned(0x1000))) struct PageDirectory _paging_kernel_page_direct
         [0] = {
             .flag.present_bit       = 1,
             .flag.read_write        = 1,
-            .flag.user_supervisor   = 1,
+            .flag.page_size         = 1,
             .lower_address          = 0,
         },
         [0x300] = {
             .flag.present_bit       = 1,
             .flag.read_write        = 1,
-            .flag.user_supervisor   = 1,
+            .flag.page_size         = 1,
             .lower_address          = 0,
         },
     }
@@ -58,7 +58,6 @@ bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void *virtu
     if(!paging_allocate_check(1)){
         return false;
     }
-    uint32_t real_virtual_address = (uint32_t)virtual_addr;
     uint8_t i = 0;
     uint8_t found = 0;
     for(; i < PAGE_FRAME_MAX_COUNT && !found; ++i){
@@ -108,7 +107,7 @@ bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_a
         .page_size = 0
     };
     uint32_t new_physical_address = 0;
-    update_page_directory_entry(page_dir, new_physical_address, virtual_addr, new_flag);
+    update_page_directory_entry(page_dir, (void*)new_physical_address, virtual_addr, new_flag);
     /* 
      * TODO: Deallocate a physical frame from respective virtual address
      * - Use the page_dir.table values to check mapped physical frame
