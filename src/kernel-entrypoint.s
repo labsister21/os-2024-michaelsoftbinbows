@@ -42,8 +42,21 @@ loader_entrypoint:         ; the loader label (defined as entry point in linker 
     or  eax, 0x80000000    ; PG flag
     mov cr0, eax
 
+    ; Jump into higher half first, cannot use C because call stack is still not working
+    lea eax, [loader_virtual]
+    jmp eax
 
-section .text                                  ; start of the text (code)
+loader_virtual:
+    mov dword [_paging_kernel_page_directory], 0
+    invlpg [0]                                ; Delete identity mapping and invalidate TLB cache for first page
+    mov esp, kernel_stack + KERNEL_STACK_SIZE ; Setup stack register to proper location
+    call kernel_setup
+.loop:
+    jmp .loop                                 ; loop forever
+
+
+section .text
+; More details: https://en.wikibooks.org/wiki/X86_Assembly/Protected_Mode
 global kernel_execute_user_program ; execute initial user program from kernel
 kernel_execute_user_program:
     mov  eax, 0x20 | 0x3
@@ -66,16 +79,7 @@ kernel_execute_user_program:
     mov  eax, ecx
     push eax ; eip register to jump back
 
-    iret 
-loader:                                        ; the loader label (defined as entry point in linker script)
-    mov  esp, kernel_stack + KERNEL_STACK_SIZE ; setup stack register to proper location
-    call kernel_setup
-.loop:
-    jmp .loop                                 ; loop forever
-
-
-section .text
-; More details: https://en.wikibooks.org/wiki/X86_Assembly/Protected_Mode
+    iret
 load_gdt:
     cli
     mov  eax, [esp+4]
