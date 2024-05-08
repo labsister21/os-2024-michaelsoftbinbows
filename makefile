@@ -92,4 +92,3 @@ iso: kernel
 	-o $(OUTPUT_FOLDER)/os2024.iso              \
 	$(OUTPUT_FOLDER)/iso
 	@rm -r $(OUTPUT_FOLDER)/iso/
-
