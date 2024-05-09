@@ -27,6 +27,7 @@ const char keyboard_scancode_1_to_ascii_map[256] = {
 };
 
 void keyboard_isr(void) {
+  if(!keyboard_state.keyboard_input_on) return;
   uint8_t scancode = in(KEYBOARD_DATA_PORT);
    
   char key = keyboard_scancode_1_to_ascii_map[scancode];
@@ -56,8 +57,29 @@ void keyboard_isr(void) {
     framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn);
   }
   else{
-    framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
+    //framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn, key, 0xFF, 0x0);
+    //framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
     keyboard_state.keyboard_buffer = key;
+    //keyboard_state.cursorColumn++;
+    /*
+    if(keyboard_state.cursorColumn==81){
+      keyboard_state.cursorRow++;
+      keyboard_state.cursorColumn = 1;
+      if(keyboard_state.cursorRow==25){
+        keyboard_state.cursorRow=0;
+      }
+    }
+    */
+  }
+  
+  
+  pic_ack(IRQ_KEYBOARD);
+}
+
+void puts(char* charp, uint8_t charcnt, uint8_t color){
+  for(uint8_t i = 0; i < charcnt; i++){
+    framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn, charp[i], color, 0x0);
+    framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
     keyboard_state.cursorColumn++;
     if(keyboard_state.cursorColumn==81){
       keyboard_state.cursorRow++;
@@ -67,14 +89,27 @@ void keyboard_isr(void) {
       }
     }
   }
-  
-  
-  pic_ack(IRQ_KEYBOARD);
+}
+
+void putchar(char c, uint8_t color){
+  framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn, c, color, 0x0);
+  framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
+  keyboard_state.cursorColumn++;
+  if(keyboard_state.cursorColumn==81){
+    keyboard_state.cursorRow++;
+    keyboard_state.cursorColumn = 1;
+    if(keyboard_state.cursorRow==25){
+      keyboard_state.cursorRow=0;
+    }
+  }
 }
 
 // Activate keyboard ISR / start listen keyboard & save to buffer
 void keyboard_state_activate(void) {
   keyboard_state.keyboard_input_on = true;
+  keyboard_state.cursorColumn = 0;
+  keyboard_state.cursorRow = 0;
+  keyboard_state.keyboard_buffer = '\0';
 }
 
 // Deactivate keyboard ISR / stop listening keyboard interrupt
