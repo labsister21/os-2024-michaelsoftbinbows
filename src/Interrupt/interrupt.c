@@ -76,6 +76,15 @@ void syscall(struct InterruptFrame frame) {
         case 0:
             *((int8_t*) frame.cpu.general.ecx) = read(*(struct FAT32DriverRequest*) frame.cpu.general.ebx);
             break;
+        case 1:
+            *((int8_t*) frame.cpu.general.ecx) = read_directory(*(struct FAT32DriverRequest*) frame.cpu.general.ebx);
+            break;
+        case 2:
+            *((int8_t*) frame.cpu.general.ecx) = write(*(struct FAT32DriverRequest*) frame.cpu.general.ebx);
+            break;
+        case 3:
+            *((int8_t*) frame.cpu.general.ecx) = delete(*(struct FAT32DriverRequest*) frame.cpu.general.ebx);
+            break;
         case 4:
             get_keyboard_buffer((char*) frame.cpu.general.ebx);
             break;

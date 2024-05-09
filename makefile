@@ -33,7 +33,7 @@ user-shell:
 	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/user-shell.c -o user-shell.o
 	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/stdlib/string.c -o string.o
 	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=binary \
-		crt0.o user-shell.o -o $(OUTPUT_FOLDER)/shell
+		crt0.o user-shell.o string.o -o $(OUTPUT_FOLDER)/shell
 	@echo Linking object shell object files and generate flat binary...
 	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=elf32-i386 \
 		crt0.o user-shell.o string.o -o $(OUTPUT_FOLDER)/shell_elf
