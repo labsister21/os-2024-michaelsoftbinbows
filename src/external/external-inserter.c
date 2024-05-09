@@ -76,9 +76,9 @@ int main(int argc, char *argv[]) {
     }
 
     // Write image in memory into original, overwrite them
+    end_filesystem_fat32();
     fptr = fopen(argv[3], "w");
     fwrite(image_storage, 4*1024*1024, 1, fptr);
     fclose(fptr);
-
     return 0;
 }
