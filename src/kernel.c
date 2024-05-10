@@ -33,6 +33,23 @@ void kernel_setup(void) {
         .parent_cluster_number = ROOT_CLUSTER_NUMBER,
         .buffer_size           = 0x100000,
     };
+
+    struct ClusterBuffer clb = {0};
+
+    char* uwu = "AAAAA\nAAAAA\nAAAA";
+
+    memset(clb.buf, 0, CLUSTER_SIZE);
+    memcpy(clb.buf, uwu, 17);
+
+    struct FAT32DriverRequest write_req = {
+        .buf = clb.buf,
+        .name = "aaa\0\0\0\0",
+        .ext  = "\0\0\0",
+        .parent_cluster_number = ROOT_CLUSTER_NUMBER,
+        .buffer_size = sizeof(struct ClusterBuffer)
+    };
+    memcpy(write_req.ext, "txt", 3);
+    write(write_req);
     uint8_t ret = read(request);
     struct BlockBuffer b;
     b.buf[0] = ret;
