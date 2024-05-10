@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     initialize_filesystem_fat32();
     struct FAT32DriverRequest request = {
         .buf         = file_buffer,
-        .ext         = "\0\0\0",
+        .ext         = "\0\0",
         .buffer_size = filesize,
     };
     sscanf(argv[2], "%u",  &request.parent_cluster_number);

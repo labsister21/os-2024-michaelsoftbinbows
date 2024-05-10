@@ -39,7 +39,7 @@ void keyboard_isr(void) {
   
   else if (key == '\b')
   {
-    if (keyboard_state.cursorColumn > 0) {
+    if (keyboard_state.cursorColumn > keyboard_state.template_length) {
       keyboard_state.keyboard_buffer = key;
       framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn-1, ' ', 0xF, 0x0);
       framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn-1);
@@ -149,6 +149,7 @@ void keyboard_state_activate(void) {
   keyboard_state.cursorColumn = 0;
   keyboard_state.cursorRow = 0;
   keyboard_state.keyboard_buffer = '\0';
+  keyboard_state.template_length = 0;
 }
 
 // Deactivate keyboard ISR / stop listening keyboard interrupt
@@ -168,4 +169,8 @@ int get_keyboard_col(){
 
 int get_keyboard_row(){
   return (keyboard_state.cursorRow);
+}
+
+void change_keyboard_template_length(uint8_t x){
+  keyboard_state.template_length = x;
 }
