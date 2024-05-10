@@ -24,7 +24,153 @@ void syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
     __asm__ volatile("int $0x30");
 }
 
+// handle multiple cd: relative or absolute
+uint8_t multiple_cd(char* path, uint8_t len_path){
+    char saved_current_path[MAX_CMD_LENGTH];
+    char last_folder_name[MAX_CMD_LENGTH];
+    int32_t find_fold_name;
+    int32_t length_fold_name = 0;
+    for(find_fold_name = strlen(current_path) - 2; find_fold_name >= 0; --find_fold_name){
+        if(current_path[find_fold_name] == '/') break;
+        length_fold_name++;
+    }
+    find_fold_name++;
+    memset(last_folder_name, 0, MAX_CMD_LENGTH);
+    memcpy(last_folder_name, (void*)current_path + find_fold_name, length_fold_name);
+
+    uint32_t saved_working_directory = working_directory;
+    memcpy(saved_current_path, current_path, MAX_CMD_LENGTH);
+    char path_buffer[8];
+    uint8_t path_buffer_p = 0;
+    memset(path_buffer, 0, 8);
+    for(uint8_t i = 0; i < len_path; i++){
+        if(path[i] == '/') break;
+        if(path_buffer_p >= 8){
+            working_directory = saved_working_directory;
+            memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+            return 1;
+        }
+        path_buffer[path_buffer_p] = path[i];
+        path_buffer_p++;
+    }
+    uint8_t i = 0;
+    // abs path
+    if(path_buffer_p == 4 && memcmp(path_buffer, "root", 4) == 0){
+        working_directory = 2;
+        memset(current_path, 0, MAX_CMD_LENGTH);
+        memcpy(current_path, "root/", 5);
+        memset(last_folder_name, 0, 8);
+        memcpy(last_folder_name, "root", 4);
+        i += 5;
+    }
+    uint8_t buf_exist = 0;
+    path_buffer_p = 0;
+    memset(path_buffer, 0, 8);
+    for(; i < len_path; i++){
+        if(path[i] == '/'){
+            if(!buf_exist){
+                working_directory = saved_working_directory;
+                memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+                return 1;
+            }else{
+                if(path_buffer_p > 8){
+                    working_directory = saved_working_directory;
+                    memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+                    return 1;
+                }
+                struct FAT32DirectoryTable cur_dir_table = {0};
+                struct FAT32DriverRequest request = {
+                    .buf                   = &cur_dir_table,
+                    .name                  = "\0\0\0\0\0\0\0",
+                    .ext                   = "\0\0",
+                    .parent_cluster_number = working_directory,
+                    .buffer_size           = sizeof(struct FAT32DirectoryTable),
+                };
+                memcpy(request.name, last_folder_name, 8);
+
+                int8_t retcode;
+                syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
+                if(retcode == 0){
+                    int32_t ret;
+                    ret = change_dir(path_buffer, cur_dir_table);
+                    if(ret != 0) {
+                        working_directory = saved_working_directory;
+                        memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+                        return 1;
+                    }
+                    memset(last_folder_name, 0, MAX_CMD_LENGTH);
+                    memcpy(last_folder_name, path_buffer, 8);
+                    buf_exist = 0;
+                    path_buffer_p = 0;
+                    memset(path_buffer, 0, 8);
+                }else{
+                    working_directory = saved_working_directory;
+                    memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+                    return 1;
+                }
+            }
+        }else{
+            if(path_buffer_p >= 8){
+                working_directory = saved_working_directory;
+                memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+                return 1;
+            }
+            buf_exist = 1;
+            path_buffer[path_buffer_p] = path[i];
+            path_buffer_p++;
+        }
+    }
+    if(buf_exist){
+        if(path_buffer_p > 8){
+            working_directory = saved_working_directory;
+            memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+            return 1;
+        }
+        struct FAT32DirectoryTable cur_dir_table = {0};
+        struct FAT32DriverRequest request = {
+            .buf                   = &cur_dir_table,
+            .name                  = "\0\0\0\0\0\0\0",
+            .ext                   = "\0\0",
+            .parent_cluster_number = working_directory,
+            .buffer_size           = sizeof(struct FAT32DirectoryTable),
+        };
+        memcpy(request.name, last_folder_name, 8);
+        int8_t retcode;
+        syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
+        if(retcode == 0){
+            int32_t ret;
+            ret = change_dir(path_buffer, cur_dir_table);
+            if(ret != 0) {
+                working_directory = saved_working_directory;
+                memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+                return 1;
+            }
+            memset(last_folder_name, 0, MAX_CMD_LENGTH);
+            memcpy(last_folder_name, path_buffer, 8);
+            buf_exist = 0;
+            path_buffer_p = 0;
+            memset(path_buffer, 0, 8);
+        }else{
+            working_directory = saved_working_directory;
+            memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void cd(){
+    uint8_t cmd_len = strlen(cmd_buffer);
+    char mult_path[MAX_CMD_LENGTH];
+    memset(mult_path, 0, MAX_CMD_LENGTH);
+    memcpy(mult_path, (void*)cmd_buffer + 3, cmd_len - 3);
+    uint8_t ret = multiple_cd(mult_path, cmd_len - 3);
+    if(ret != 0){
+        syscall(6, (uint32_t) "cd failed", 9, 0xC);
+    }else{
+        syscall(6, (uint32_t) "cd success", 10, 0xA);
+    }
+    /*
     char cur_dir[8];
     int i = strlen(current_path)-2;
     for(; i > 0; i--){
@@ -68,11 +214,35 @@ void cd(){
         }
     }else{
         syscall(6, (uint32_t) "Read dir failed", 15, 0xC);
-    }
+    }*/
 }
 
 void ls(){
     struct FAT32DirectoryTable      cl   = {0};
+    char args[MAX_CMD_LENGTH];
+    uint8_t cmd_len = strlen(cmd_buffer);
+    memcpy(args, (void*)cmd_buffer + 3, cmd_len - 3);
+    uint8_t arg_exist = 0;
+    for(uint8_t i = 0; i < MAX_CMD_LENGTH && !arg_exist; i++){
+        if(args[i] == '\0') break;
+        if(args[i] != ' ') arg_exist = 1;
+    }
+    char saved_current_path[MAX_CMD_LENGTH];
+    uint32_t saved_working_directory = working_directory;
+    if(arg_exist){
+        memset(saved_current_path, 0, MAX_CMD_LENGTH);
+        memcpy(saved_current_path, current_path, MAX_CMD_LENGTH);
+        uint8_t ret = multiple_cd(args, cmd_len - 3);
+        if(ret != 0){
+            char disp = ret + '0';
+            syscall(6, (uint32_t) "Read failed with code ", 22, 0xC);
+            syscall(5, (uint32_t)&disp, 0xC, 0);
+            memset(current_path, 0, MAX_CMD_LENGTH);
+            memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+            working_directory = saved_working_directory;
+            return;
+        }
+    }
     char real_name[8];
     int8_t i;
     uint8_t current_path_length = strlen(current_path);
@@ -125,6 +295,12 @@ void ls(){
         char disp = retcode + '0';
         syscall(6, (uint32_t) "Read failed with code ", 22, 0xC);
         syscall(5, (uint32_t)&disp, 0xC, 0);
+    }
+    if(arg_exist){
+        memset(current_path, 0, MAX_CMD_LENGTH);
+        memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+        working_directory = saved_working_directory;
+        return;
     }
 }
 
@@ -354,7 +530,7 @@ void exec(){
     }else{
 
     }
-    memset(cmd_buffer, 9, MAX_CMD_LENGTH);
+    memset(cmd_buffer, 0, MAX_CMD_LENGTH);
     char slashN = '\n';
     syscall(5, (uint32_t)&slashN, 0xF, 0);
     cur_cmd_length = 0;
@@ -429,6 +605,11 @@ int main(void) {
 }
 
 int32_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
+    if(strlen(path) == 1 && memcmp(path, ".", 1) == 0){
+        memset(path, 0, 8);
+        memcpy(path, dir_table.table[0].name, 8);
+        return 0;
+    }
     uint32_t parent_cluster_num = dir_table.table[1].cluster_high << 16 | dir_table.table[1].cluster_low;
 
     if (strlen(path) >= 2 && memcmp(path, "..", 2) == 0) {
@@ -439,12 +620,14 @@ int32_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
                 if(current_path[i] == '/' && i < n-2) break;
                 current_path[i] = '\0';
             }
-
+            memset(path, 0, 8);
+            memcpy(path, dir_table.table[1].name, 8);
             return 0;
         }
     }
     else{
-        for (int i = 2; i < 64; i++) {
+        for (int i = 0; i < 64; i++) {
+            if(i == 1) continue;
             if (dir_table.table[i].user_attribute == UATTR_NOT_EMPTY && dir_table.table[i].attribute == ATTR_SUBDIRECTORY && strcmp(path,dir_table.table[i].name) == 1) {
                 strcat(current_path,path);
                 strcat(current_path,"/");
