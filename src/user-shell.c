@@ -264,6 +264,7 @@ void ls(){
         real_name[j] = current_path[i];
     }
     char slashN = '\n';
+    char dot = '.';
     /*
     char slashN = '\n';
     syscall(5, (uint32_t)&slashN, 0xF, 0);
@@ -299,6 +300,7 @@ void ls(){
                     for (k = 0; k < 3 && cl.table[i].ext[k] != '\0'; k++)
                     {
                     }
+                    syscall(5,(uint32_t)&dot,0xF,0);
                     syscall(6, (uint32_t)cl.table[i].ext, k, 0xF);
                 }
                 syscall(5, (uint32_t)&slashN, 0xF, 0);
@@ -520,6 +522,7 @@ void findHelper(char* target_name,char* local_current_path, uint32_t local_worki
     };
     memcpy(request.name, real_name, 8);
     char slashN = '\n';
+    char dot = '.';
     int32_t retcode;
     syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
     if(retcode == 0){
@@ -537,6 +540,7 @@ void findHelper(char* target_name,char* local_current_path, uint32_t local_worki
                     if(cl.table[i].attribute != ATTR_SUBDIRECTORY){
                         uint8_t k;
                         for(k = 0; k < 3 && cl.table[i].ext[k] != '\0'; k++){}
+                        syscall(5,(uint32_t)&dot,0x9,0);
                         syscall(6, (uint32_t)cl.table[i].ext, k, 0x9);
                     }
                     syscall(5,(uint32_t)&slashN,0x9,0);
