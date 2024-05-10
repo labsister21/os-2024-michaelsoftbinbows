@@ -53,3 +53,34 @@ char *strcat(char *dest, const char *src){
     dest[i+j] = '\0';
     return dest;
 }
+
+void *strcpy(char *dest, const char *src){
+    // assumsi dest sudah memiliki memory setidaknya n+1
+    int i=0, n = strlen(src);
+    for (; i < n; i++)
+        dest[i] = src[i];
+    dest[i+1] = '\0';
+    return dest;
+}
+
+int strlen(const char* str) {
+    int i = 0;
+    while (str[i] != '\0')
+        i++;
+    
+    return i;
+}
+
+int strcmp(const char *str1, const char *str2) {
+    if (strlen(str1) != strlen(str2)) {
+        return 0;
+    }
+
+    for (int i=0; i<strlen(str1); i++) {
+        if (str1[i] != str2[i]) {
+            return 0;
+        }
+    }
+    
+    return 1;
+}
