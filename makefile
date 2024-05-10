@@ -81,6 +81,8 @@ kernel:
 	@echo Linking object files and generate elf32...
 	@rm -f *.o
 
+fast : clean disk insert-shell
+
 iso: kernel
 	@mkdir -p $(OUTPUT_FOLDER)/iso/boot/grub
 	@cp $(OUTPUT_FOLDER)/kernel     $(OUTPUT_FOLDER)/iso/boot/

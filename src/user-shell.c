@@ -10,6 +10,7 @@ static uint8_t cur_cmd_length = 0;
 
 static uint8_t current_path_length = 0;
 
+
 //static uint8_t current_dir_cluster_num = 2;
 
 static uint8_t parent_dir_cluster_num = 2;
@@ -94,7 +95,7 @@ void ls(){
         .buf                   = &cl,
         .name                  = "\0\0\0\0\0\0\0",
         .ext                   = "\0\0",
-        .parent_cluster_number = parent_dir_cluster_num,
+        .parent_cluster_number = working_directory,
         .buffer_size           = sizeof(struct FAT32DirectoryTable),
     };
     memcpy(request.name, real_name, 8);
@@ -121,6 +122,7 @@ void ls(){
     }
 }
 
+
 void mkdir(){
     char name[MAX_CMD_LENGTH];
     memcpy(name, (void*)cmd_buffer + 6, cur_cmd_length - 6);
@@ -134,16 +136,16 @@ void mkdir(){
         .buf                   = &cl,
         .name                  = "\0\0\0\0\0\0\0",
         .ext                   = "\0\0",
-        .parent_cluster_number = parent_dir_cluster_num,
+        .parent_cluster_number = working_directory,
         .buffer_size           = 0,
     };
     memcpy(request.name, real_name, 8);
     int8_t retcode;
     syscall(2, (uint32_t) &request, (uint32_t) &retcode, 0);
     if (retcode == 0) {
-        syscall(6, (uint32_t) "\nWrite success", 13, 0xA);
+        syscall(6, (uint32_t) "Write success", 13, 0xA);
     }else{
-        syscall(6, (uint32_t) "\nWrite failed", 12, 0xC);
+        syscall(6, (uint32_t) "Write failed", 12, 0xC);
     }
 }
 
@@ -243,7 +245,23 @@ void mv(){
 }
 
 void find(){
-
+    char name[MAX_CMD_LENGTH];
+    memset(name,0,MAX_CMD_LENGTH);
+    memcpy(name, (void*)cmd_buffer + 5, cur_cmd_length - 5);
+    struct FAT32DirectoryTable      cl   = {0};
+    struct FAT32DriverRequest request = {
+        .buf                   = &cl,
+        .name                  = "\0\0\0\0\0\0\0",
+        .ext                   = "\0\0",
+        .parent_cluster_number = working_directory,
+        .buffer_size           = sizeof(struct FAT32DirectoryTable),
+    };
+    memcpy(request.name, name, 8);
+    syscall(6,(uint32_t)request.name,10,0xA);
+    syscall(6,(uint32_t)"\n",10,0xA);
+    int32_t retcode;
+    syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
+    syscall(6,(uint32_t)retcode,10,0xA);
 }
 
 void exec(){
