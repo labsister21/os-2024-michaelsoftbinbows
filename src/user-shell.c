@@ -12,7 +12,7 @@ static uint8_t cur_cmd_length = 0;
 
 //static uint8_t current_dir_cluster_num = 2;
 
-static uint8_t parent_dir_cluster_num = 2;
+//static uint8_t parent_dir_cluster_num = 2;
 
 void syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
     __asm__ volatile("mov %0, %%ebx" : /* <Empty> */ : "r"(ebx));
@@ -104,6 +104,10 @@ void ls(){
     int32_t retcode;
     syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
     if(retcode == 0){
+        memcpy(real_name, ((struct FAT32DirectoryTable*)request.buf)->table[1].name, 8);
+        uint32_t parent_cluster_num = ((struct FAT32DirectoryTable*)request.buf)->table[1].cluster_high << 16 | ((struct FAT32DirectoryTable*)request.buf)->table[1].cluster_low;
+        request.parent_cluster_number = parent_cluster_num;
+        memset(request.buf, 0, CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry));
         for(uint8_t i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++){
             if(cl.table[i].user_attribute == UATTR_NOT_EMPTY){
                 uint8_t j;
@@ -179,7 +183,7 @@ void cat(){
         .buf                   = current_dir.table,
         .name                  = "\0\0\0\0\0\0\0",
         .ext                   = "\0\0",
-        .parent_cluster_number = parent_dir_cluster_num,
+        .parent_cluster_number = working_directory,
         .buffer_size           = 0,
     };
     char current_dir_name[8];
