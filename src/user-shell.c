@@ -300,7 +300,7 @@ void ls(){
                     for (k = 0; k < 3 && cl.table[i].ext[k] != '\0'; k++)
                     {
                     }
-                    syscall(5,(uint32_t)&dot,0xF,0);
+                    if(k>0)syscall(5,(uint32_t)&dot,0xF,0);
                     syscall(6, (uint32_t)cl.table[i].ext, k, 0xF);
                 }
                 syscall(5, (uint32_t)&slashN, 0xF, 0);
@@ -540,7 +540,7 @@ void findHelper(char* target_name,char* local_current_path, uint32_t local_worki
                     if(cl.table[i].attribute != ATTR_SUBDIRECTORY){
                         uint8_t k;
                         for(k = 0; k < 3 && cl.table[i].ext[k] != '\0'; k++){}
-                        syscall(5,(uint32_t)&dot,0x9,0);
+                        if(k>0)syscall(5,(uint32_t)&dot,0x9,0);
                         syscall(6, (uint32_t)cl.table[i].ext, k, 0x9);
                     }
                     syscall(5,(uint32_t)&slashN,0x9,0);
@@ -557,17 +557,20 @@ void findHelper(char* target_name,char* local_current_path, uint32_t local_worki
 }
 
 void find(){
-    char name[MAX_CMD_LENGTH];
-    memcpy(name, (void*)cmd_buffer + 5, cur_cmd_length - 5);
-    char target_name[9];
-    memset(target_name, 0, 9);
-    for(uint8_t i = 0; i < 9 && i < cur_cmd_length - 5; i++){
-        target_name[i] = name[i];
+    uint8_t cmd_len = strlen(cmd_buffer);
+    if(cmd_len>5){
+        char name[MAX_CMD_LENGTH];
+        memcpy(name, (void*)cmd_buffer + 5, cur_cmd_length - 5);
+        char target_name[9];
+        memset(target_name, 0, 9);
+        for(uint8_t i = 0; i < 9 && i < cur_cmd_length - 5; i++){
+            target_name[i] = name[i];
+        }
+        struct FAT32DirectoryTable      cl   = {0};
+        char local_current_path[128] = "root/";
+        uint32_t local_working_directory = 2; 
+        findHelper(target_name,local_current_path,local_working_directory,cl);
     }
-    struct FAT32DirectoryTable      cl   = {0};
-    char local_current_path[128] = "root/";
-    uint32_t local_working_directory = 2; 
-    findHelper(target_name,local_current_path,local_working_directory,cl);
 }
 
 void clear(){
