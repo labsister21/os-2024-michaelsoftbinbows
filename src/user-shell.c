@@ -251,24 +251,73 @@ void mv(){
 
 }
 
-void find(){
-    char name[MAX_CMD_LENGTH];
-    memset(name,0,MAX_CMD_LENGTH);
-    memcpy(name, (void*)cmd_buffer + 5, cur_cmd_length - 5);
-    struct FAT32DirectoryTable      cl   = {0};
+
+void findHelper(char* target_name,char* local_current_path, uint32_t local_working_directory, struct FAT32DirectoryTable cl){
+    char real_name[8];
+    int8_t i;
+    uint8_t current_path_length = strlen(local_current_path);
+    for(i = current_path_length - 2; i >= 0; --i){
+        if(local_current_path[i] == '/') break;
+    }
+    i++;
+    memset(real_name, 0, 8);
+    uint8_t j;
+    for(j = 0; i < current_path_length - 1 && j < 8; j++, i++){
+        real_name[j] = local_current_path[i];
+    }
     struct FAT32DriverRequest request = {
         .buf                   = &cl,
         .name                  = "\0\0\0\0\0\0\0",
         .ext                   = "\0\0",
-        .parent_cluster_number = working_directory,
+        .parent_cluster_number = local_working_directory,
         .buffer_size           = sizeof(struct FAT32DirectoryTable),
     };
-    memcpy(request.name, name, 8);
-    syscall(6,(uint32_t)request.name,10,0xA);
-    syscall(6,(uint32_t)"\n",10,0xA);
+    memcpy(request.name, real_name, 8);
+    char slashN = '\n';
     int32_t retcode;
     syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
-    syscall(6,(uint32_t)retcode,10,0xA);
+    if(retcode == 0){
+        memcpy(real_name, ((struct FAT32DirectoryTable*)request.buf)->table[1].name, 8);
+        uint32_t parent_cluster_num = ((struct FAT32DirectoryTable*)request.buf)->table[1].cluster_high << 16 | ((struct FAT32DirectoryTable*)request.buf)->table[1].cluster_low;
+        request.parent_cluster_number = parent_cluster_num;
+        memset(request.buf, 0, CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry));
+        for(uint8_t i = 2; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); i++){
+            if(cl.table[i].user_attribute == UATTR_NOT_EMPTY){
+                uint8_t j;
+                for(j = 0; j < 8 && cl.table[i].name[j] != '\0'; j++){}
+                if(strcmp(cl.table[i].name,target_name)){
+                    syscall(6, (uint32_t)local_current_path, strlen(local_current_path), 0x9);
+                    syscall(6, (uint32_t)target_name, j, 0x9);
+                    if(cl.table[i].attribute != ATTR_SUBDIRECTORY){
+                        uint8_t k;
+                        for(k = 0; k < 3 && cl.table[i].ext[k] != '\0'; k++){}
+                        syscall(6, (uint32_t)cl.table[i].ext, k, 0x9);
+                    }
+                    syscall(5,(uint32_t)&slashN,0x9,0);
+                }
+                char path[MAX_CMD_LENGTH];
+                strcat(path,local_current_path);
+                strcat(path,cl.table[i].name);
+                strcat(path,"/");
+                findHelper(target_name,path,local_working_directory,cl);
+                memset(path,0,MAX_CMD_LENGTH);
+            }
+        }
+    }
+}
+
+void find(){
+    char name[MAX_CMD_LENGTH];
+    memcpy(name, (void*)cmd_buffer + 5, cur_cmd_length - 5);
+    char target_name[9];
+    memset(target_name, 0, 9);
+    for(uint8_t i = 0; i < 9 && i < cur_cmd_length - 5; i++){
+        target_name[i] = name[i];
+    }
+    struct FAT32DirectoryTable      cl   = {0};
+    char local_current_path[128] = "root/";
+    uint32_t local_working_directory = 2; 
+    findHelper(target_name,local_current_path,local_working_directory,cl);
 }
 
 void exec(){
