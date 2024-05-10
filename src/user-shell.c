@@ -571,6 +571,9 @@ void find(){
         uint32_t local_working_directory = 2; 
         findHelper(target_name,local_current_path,local_working_directory,cl);
     }
+    else{
+        syscall(6,(uint32_t)"Usage : find <file name>",25,0xC);
+    }
 }
 
 void clear(){
