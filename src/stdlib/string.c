@@ -56,15 +56,15 @@ char *strcat(char *dest, const char *src){
 
 void *strcpy(char *dest, const char *src){
     // assumsi dest sudah memiliki memory setidaknya n+1
-    size_t i=0, n = strlen(src);
+    int i=0, n = strlen(src);
     for (; i < n; i++)
         dest[i] = src[i];
     dest[i+1] = '\0';
     return dest;
 }
 
-size_t strlen(const char* str) {
-    size_t i;
+int strlen(const char* str) {
+    int i = 0;
     while (str[i] != '\0')
         i++;
     
@@ -76,7 +76,7 @@ int strcmp(const char *str1, const char *str2) {
         return 0;
     }
 
-    for (size_t i=0; i<strlen(str1); i++) {
+    for (int i=0; i<strlen(str1); i++) {
         if (str1[i] != str2[i]) {
             return 0;
         }

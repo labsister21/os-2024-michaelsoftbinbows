@@ -56,7 +56,7 @@ char *strcat(char *dest, const char *src);
 
 void *strcpy(char *dest, const char *src);
 
-size_t strlen(const char* str);
+int strlen(const char* str);
 
 int strcmp(const char *str1, const char *str2);
 

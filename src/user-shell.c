@@ -20,13 +20,14 @@ void syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
 
 void cd(){
     char cur_dir[8];
-    int8_t i = (int8_t) strlen(current_path)-2;
+    int i = strlen(current_path)-2;
     for(; i > 0; i--){
         if(current_path[i] == '/') break;
     }
+    if (i != 0) i++;
 
     memset(cur_dir, 0, 8);
-    for(int8_t j = 0; current_path[i] != '/' && j < 8; j++, i++){
+    for(int j = 0; current_path[i] != '/' && j < 8; j++, i++){
         cur_dir[j] = current_path[i];
     }
 
@@ -41,7 +42,7 @@ void cd(){
     };
     memcpy(request.name, cur_dir, 8);
 
-    int32_t retcode;
+    int8_t retcode;
     syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
     if(retcode == 0){
         char name[MAX_CMD_LENGTH];
@@ -59,7 +60,6 @@ void cd(){
         } else {
             syscall(6, (uint32_t) "cd failed", 9, 0xC);
         }
-
     }else{
         syscall(6, (uint32_t) "Read dir failed", 15, 0xC);
     }
@@ -82,13 +82,13 @@ void mkdir(){
         .buf                   = &cl,
         .name                  = "\0\0\0\0\0\0\0",
         .ext                   = "\0\0",
-        .parent_cluster_number = ROOT_CLUSTER_NUMBER,
+        .parent_cluster_number = working_directory,
         .buffer_size           = 0,
     };
     memcpy(request.name, real_name, 8);
-    int32_t retcode;
+    int8_t retcode;
     syscall(2, (uint32_t) &request, (uint32_t) &retcode, 0);
-    if(retcode == 0){
+    if (retcode == 0) {
         syscall(6, (uint32_t) "Write success", 13, 0xA);
     }else{
         syscall(6, (uint32_t) "Write failed", 12, 0xC);
@@ -213,21 +213,30 @@ int main(void) {
     return 0;
 }
 
-int8_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
-    // uint32_t parent_cluster_num = dir_table.table[1].cluster_high << 16 | dir_table.table[1].cluster_low;
+int32_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
+    uint32_t parent_cluster_num = dir_table.table[1].cluster_high << 16 | dir_table.table[1].cluster_low;
 
-    // if ../
-    // else
-    for (int i = 0; i < 64; i++) {
-        if (i != 1 && dir_table.table[i].user_attribute == UATTR_NOT_EMPTY && dir_table.table[i].attribute == ATTR_SUBDIRECTORY) { 
-            if (strcmp(path,dir_table.table[i].name) == 1) {
+    if (strlen(path) >= 3 && memcmp(path, "../", 3) == 0) {
+        if (working_directory != ROOT_CLUSTER_NUMBER) {
+            working_directory = parent_cluster_num;
+            int n = strlen(current_path), i=n-1;
+            for(; i > 4; i--){
+                if(current_path[i] == '/' && i < n-2) break;
+                current_path[i] = '\0';
+            }
+
+            return 0;
+        }
+    }
+    else{
+        for (int i = 2; i < 64; i++) {
+            if (dir_table.table[i].user_attribute == UATTR_NOT_EMPTY && dir_table.table[i].attribute == ATTR_SUBDIRECTORY && strcmp(path,dir_table.table[i].name) == 1) {
                 strcat(current_path,path);
-                char temp[1] = "/";
-                strcat(current_path,temp);
+                strcat(current_path,"/");
 
                 uint32_t cluster_num = dir_table.table[i].cluster_high << 16 | dir_table.table[i].cluster_low;
 
-                working_directory =  cluster_num;
+                working_directory = cluster_num;
 
                 return 0;
             }
