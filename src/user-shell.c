@@ -141,9 +141,9 @@ void mkdir(){
     int8_t retcode;
     syscall(2, (uint32_t) &request, (uint32_t) &retcode, 0);
     if (retcode == 0) {
-        syscall(6, (uint32_t) "Write success", 13, 0xA);
+        syscall(6, (uint32_t) "\nWrite success", 13, 0xA);
     }else{
-        syscall(6, (uint32_t) "Write failed", 12, 0xC);
+        syscall(6, (uint32_t) "\nWrite failed", 12, 0xC);
     }
 }
 
