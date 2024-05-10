@@ -221,14 +221,17 @@ void ls(){
     struct FAT32DirectoryTable      cl   = {0};
     char args[MAX_CMD_LENGTH];
     uint8_t cmd_len = strlen(cmd_buffer);
-    memcpy(args, (void*)cmd_buffer + 3, cmd_len - 3);
+    char saved_current_path[MAX_CMD_LENGTH];
+    uint32_t saved_working_directory = working_directory;
     uint8_t arg_exist = 0;
+
+    if(cmd_len > 2) {
+
+    memcpy(args, (void*)cmd_buffer + 3, cmd_len - 3);
     for(uint8_t i = 0; i < MAX_CMD_LENGTH && !arg_exist; i++){
         if(args[i] == '\0') break;
         if(args[i] != ' ') arg_exist = 1;
     }
-    char saved_current_path[MAX_CMD_LENGTH];
-    uint32_t saved_working_directory = working_directory;
     if(arg_exist){
         memset(saved_current_path, 0, MAX_CMD_LENGTH);
         memcpy(saved_current_path, current_path, MAX_CMD_LENGTH);
@@ -243,6 +246,9 @@ void ls(){
             return;
         }
     }
+
+    }
+
     char real_name[8];
     int8_t i;
     uint8_t current_path_length = strlen(current_path);
@@ -561,8 +567,7 @@ int32_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
         }
     }
     else{
-        for (int i = 0; i < 64; i++) {
-            if(i == 1) continue;
+        for (int i = 2; i < 64; i++) {
             if (dir_table.table[i].user_attribute == UATTR_NOT_EMPTY && dir_table.table[i].attribute == ATTR_SUBDIRECTORY && strcmp(path,dir_table.table[i].name) == 1) {
                 strcat(current_path,path);
                 strcat(current_path,"/");
