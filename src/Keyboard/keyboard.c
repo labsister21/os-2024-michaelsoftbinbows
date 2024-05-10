@@ -35,8 +35,46 @@ void keyboard_isr(void) {
     pic_ack(IRQ_KEYBOARD);
     return;
   }
-
-  keyboard_state.keyboard_buffer = key;
+  
+  else if (key == '\b')
+  {
+    if (keyboard_state.cursorColumn > keyboard_state.template_length) {
+      keyboard_state.keyboard_buffer = key;
+      /*
+      framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn-1, ' ', 0xF, 0x0);
+      framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn-1);
+      keyboard_state.cursorColumn--;
+      if(keyboard_state.cursorColumn==0){
+        keyboard_state.cursorRow+=24;
+        keyboard_state.cursorRow %=25;
+        keyboard_state.cursorColumn = 80;
+      }
+      */
+    }
+  }
+  else if (key == '\n'){
+    keyboard_state.keyboard_buffer = key;
+    //keyboard_state.cursorRow++ ;
+    //keyboard_state.cursorRow %=25;
+    //keyboard_state.cursorColumn = 0;
+    //framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn);
+  }
+  else{
+    //framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn, key, 0xFF, 0x0);
+    //framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
+    keyboard_state.keyboard_buffer = key;
+    //keyboard_state.cursorColumn++;
+    /*
+    if(keyboard_state.cursorColumn==81){
+      keyboard_state.cursorRow++;
+      keyboard_state.cursorColumn = 1;
+      if(keyboard_state.cursorRow==25){
+        keyboard_state.cursorRow=0;
+      }
+    }
+    */
+  }
+  
   
   pic_ack(IRQ_KEYBOARD);
 }

@@ -8,8 +8,7 @@ static uint32_t working_directory = ROOT_CLUSTER_NUMBER;
 
 static uint8_t cur_cmd_length = 0;
 
-static uint8_t current_path_length = 0;
-
+//static uint8_t current_path_length = 0;
 
 //static uint8_t current_dir_cluster_num = 2;
 
@@ -72,15 +71,15 @@ void cd(){
     }
 }
 
-
 void ls(){
     struct FAT32DirectoryTable      cl   = {0};
     char real_name[8];
     int8_t i;
+    uint8_t current_path_length = strlen(current_path);
     for(i = current_path_length - 2; i >= 0; --i){
         if(current_path[i] == '/') break;
     }
-    if(i == -1) i++;
+    i++;
     memset(real_name, 0, 8);
     uint8_t j;
     for(j = 0; i < current_path_length - 1 && j < 8; j++, i++){
@@ -91,6 +90,9 @@ void ls(){
     char slashN = '\n';
     syscall(5, (uint32_t)&slashN, 0xF, 0);
     */
+   //syscall(6, (uint32_t)real_name, j, 0xF);
+   //char wd = parent_dir_cluster_num + '0';
+   //syscall(5, (uint32_t)&wd, 0xF, 0);
     struct FAT32DriverRequest request = {
         .buf                   = &cl,
         .name                  = "\0\0\0\0\0\0\0",
@@ -182,6 +184,7 @@ void cat(){
     };
     char current_dir_name[8];
     int8_t uu;
+    uint8_t current_path_length = strlen(current_path);
     for(uu = current_path_length - 2; uu >= 0; --uu){
         if(current_path[uu] == '/') break;
     }
@@ -319,10 +322,10 @@ uint8_t printPath(){
 void template_print(){
     syscall(6, (uint32_t) "Binbows@IF-2230", 15, 0xB);
     syscall(6, (uint32_t) ":", 1, 0x7);
-    uint8_t x = printPath();
+    syscall(6, (uint32_t) current_path, (uint32_t) strlen(current_path), 0xD);
     syscall(6, (uint32_t)"$", 1, 0x7);
     syscall(6, (uint32_t)" ", 1, 0xF);
-    x += 18;
+    uint8_t x = strlen(current_path) + 18;
     syscall(19, (uint32_t)&x, 0, 0);
 }
 
@@ -349,13 +352,13 @@ int main(void) {
     current_path[2] = 'o';
     current_path[3] = 't';
     current_path[4] = '/';
-    current_path_length = 5;
     template_print();
     char buf;
     while (true) {
         syscall(4, (uint32_t) &buf, 0, 0);
         if(buf){
             if(buf == '\n'){
+                syscall(5, (uint32_t)&buf, 0, 0);
                 exec();
                 template_print();
             }else if(buf == '\b'){
