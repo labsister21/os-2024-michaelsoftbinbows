@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "../filesystem/fat32.h"
 
 /* -- PIC constants -- */
 

@@ -5,7 +5,6 @@
 
 static struct KeyboardDriverState keyboard_state;
 
-
 const char keyboard_scancode_1_to_ascii_map[256] = {
       0, 0x1B, '1', '2', '3', '4', '5', '6',  '7', '8', '9',  '0',  '-', '=', '\b', '\t',
     'q',  'w', 'e', 'r', 't', 'y', 'u', 'i',  'o', 'p', '[',  ']', '\n',   0,  'a',  's',
@@ -41,6 +40,7 @@ void keyboard_isr(void) {
   {
     if (keyboard_state.cursorColumn > keyboard_state.template_length) {
       keyboard_state.keyboard_buffer = key;
+      /*
       framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn-1, ' ', 0xF, 0x0);
       framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn-1);
       keyboard_state.cursorColumn--;
@@ -49,14 +49,15 @@ void keyboard_isr(void) {
         keyboard_state.cursorRow %=25;
         keyboard_state.cursorColumn = 80;
       }
+      */
     }
   }
   else if (key == '\n'){
     keyboard_state.keyboard_buffer = key;
-    keyboard_state.cursorRow++ ;
-    keyboard_state.cursorRow %=25;
-    keyboard_state.cursorColumn = 0;
-    framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn);
+    //keyboard_state.cursorRow++ ;
+    //keyboard_state.cursorRow %=25;
+    //keyboard_state.cursorColumn = 0;
+    //framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn);
   }
   else{
     //framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn, key, 0xFF, 0x0);
@@ -80,67 +81,37 @@ void keyboard_isr(void) {
 
 void puts(char* charp, uint8_t charcnt, uint8_t color){
   for(uint8_t i = 0; i < charcnt; i++){
-      char c = charp[i];
-      if(c == '\n'){
-      keyboard_state.cursorRow++ ;
-      keyboard_state.cursorRow %=25;
-      keyboard_state.cursorColumn = 0;
-      framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn);
-    }else if(c == '\b'){
-      if (keyboard_state.cursorColumn > 0) {
-        framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn-1, ' ', 0xF, 0x0);
-        framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn-1);
-        keyboard_state.cursorColumn--;
-        if(keyboard_state.cursorColumn==0){
-          keyboard_state.cursorRow+=24;
-          keyboard_state.cursorRow %=25;
-          keyboard_state.cursorColumn = 80;
-        }
-      }
-    }else{
-      framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn, c, color, 0x0);
-      framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
-      keyboard_state.cursorColumn++;
-      if(keyboard_state.cursorColumn==81){
-        keyboard_state.cursorRow++;
-        keyboard_state.cursorColumn = 1;
-        if(keyboard_state.cursorRow==25){
-          keyboard_state.cursorRow=0;
-        }
-      }
+    if (charp[i] == '\0') {
+      break;
     }
+
+    putchar(charp[i],color);
   }
 }
 
 void putchar(char c, uint8_t color){
-  if(c == '\n'){
-    keyboard_state.cursorRow++ ;
-    keyboard_state.cursorRow %=25;
-    keyboard_state.cursorColumn = 0;
-    framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn);
-  }else if(c == '\b'){
+  if(c == '\b'){
     if (keyboard_state.cursorColumn > 0) {
       framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn-1, ' ', 0xF, 0x0);
-      framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn-1);
       keyboard_state.cursorColumn--;
-      if(keyboard_state.cursorColumn==0){
-        keyboard_state.cursorRow+=24;
-        keyboard_state.cursorRow %=25;
-        keyboard_state.cursorColumn = 80;
-      }
+    }
+    else if (keyboard_state.cursorColumn == 0 && keyboard_state.cursorRow > 0) {
+      keyboard_state.cursorRow--;
+      keyboard_state.cursorColumn = 80;
     }
   }else{
-    framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn, c, color, 0x0);
-    framebuffer_set_cursor(keyboard_state.cursorRow,keyboard_state.cursorColumn+1);
-    keyboard_state.cursorColumn++;
-    if(keyboard_state.cursorColumn==81){
+    if (c != '\n') {
+      framebuffer_write(keyboard_state.cursorRow, keyboard_state.cursorColumn, c, color, 0x0);
+      keyboard_state.cursorColumn++;
+    }
+
+    if (c == '\n' || keyboard_state.cursorColumn == 81) {
       keyboard_state.cursorRow++;
-      keyboard_state.cursorColumn = 1;
-      if(keyboard_state.cursorRow==25){
-        keyboard_state.cursorRow=0;
-      }
+      keyboard_state.cursorRow %= 25;
+      keyboard_state.cursorColumn = 0;
     }
   }
+  framebuffer_set_cursor(keyboard_state.cursorRow, keyboard_state.cursorColumn);
 }
 
 // Activate keyboard ISR / start listen keyboard & save to buffer
