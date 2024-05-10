@@ -145,3 +145,9 @@ int get_keyboard_row(){
 void change_keyboard_template_length(uint8_t x){
   keyboard_state.template_length = x;
 }
+
+void clear_screen(){
+  framebuffer_clear();
+  keyboard_state.cursorColumn = 0;
+  keyboard_state.cursorRow = -1;
+}

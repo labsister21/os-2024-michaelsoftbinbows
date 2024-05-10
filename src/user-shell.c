@@ -320,6 +320,10 @@ void find(){
     findHelper(target_name,local_current_path,local_working_directory,cl);
 }
 
+void clear(){
+    syscall(69,0,0,0);
+}
+
 void exec(){
     char command[MAX_CMD_LENGTH];
     int cmd_length = 0;
@@ -345,6 +349,8 @@ void exec(){
         mv();
     }else if(cmd_length == 4 && memcmp(command, "find", 4) == 0){
         find();
+    }else if(cmd_length == 5 && memcmp(command, "clear", 5) == 0){
+        clear();
     }else{
 
     }
@@ -364,13 +370,6 @@ void usual(char buf){
     syscall(5, (uint32_t) &buf, 0xF, 0);
 }
 
-uint8_t printPath(){
-    uint8_t i = 0;
-    for(; i < MAX_CMD_LENGTH && current_path[i] != 0; i++){
-        syscall(5, (uint32_t)&current_path[i], 0xD, 0);
-    }
-    return i;
-}
 
 void template_print(){
     syscall(6, (uint32_t) "Binbows@IF-2230", 15, 0xB);
@@ -432,7 +431,7 @@ int main(void) {
 int32_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
     uint32_t parent_cluster_num = dir_table.table[1].cluster_high << 16 | dir_table.table[1].cluster_low;
 
-    if (strlen(path) >= 3 && memcmp(path, "../", 3) == 0) {
+    if (strlen(path) >= 2 && memcmp(path, "..", 2) == 0) {
         if (working_directory != ROOT_CLUSTER_NUMBER) {
             working_directory = parent_cluster_num;
             int n = strlen(current_path), i=n-1;

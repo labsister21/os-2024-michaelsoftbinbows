@@ -68,4 +68,6 @@ void putchar(char, uint8_t);
 
 void change_keyboard_template_length(uint8_t);
 
+void clear_screen();
+
 #endif
