@@ -33,11 +33,16 @@ void kernel_setup(void) {
         .parent_cluster_number = ROOT_CLUSTER_NUMBER,
         .buffer_size           = 0x100000,
     };
-    read(request);
-
+    uint8_t ret = read(request);
+    struct BlockBuffer b;
+    b.buf[0] = ret;
+    b.buf[1] = 'A';
+    write_blocks(b.buf, 0x100, 1);
     // Set TSS $esp pointer and jump into shell 
     set_tss_kernel_current_stack();
     kernel_execute_user_program((uint8_t*) 0);
+    int a = 1;
+    a++;
 
     while (true);
 }

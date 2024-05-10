@@ -250,6 +250,8 @@ int8_t delete(struct FAT32DriverRequest request);
 
 void end_filesystem_fat32(void);
 
+void write_cluster_map(void);
+
 /*
 
 int memcmp (const void *str1, const void *str2, size_t count);
