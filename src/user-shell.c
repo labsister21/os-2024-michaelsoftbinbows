@@ -637,6 +637,10 @@ void find(){
     }
 }
 
+void cp(){
+    
+}
+
 void clear(){
     syscall(69,0,0,0);
 }
