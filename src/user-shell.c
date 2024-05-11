@@ -317,14 +317,58 @@ void ls(){
 
 void mkdir(){
     char name[MAX_CMD_LENGTH];
-    memcpy(name, (void *)cmd_buffer + 6, cur_cmd_length - 6);
+    uint8_t cmd_len = strlen(cmd_buffer);
+
+    if(cmd_len == 5){
+        syscall(6, (uint32_t) "No arguments!", 12, 0xC);
+        return;
+    }
+    char args[MAX_CMD_LENGTH];
+    memcpy(args, (void*)cmd_buffer + 6, cur_cmd_length - 6);
+    char saved_current_path[MAX_CMD_LENGTH];
+    uint32_t saved_working_directory = working_directory;
+    uint8_t arg_exist = 0;
+    uint8_t file_name_ext_len;
+    for(uint8_t i = 0; i < cur_cmd_length - 4 && !arg_exist; i++){
+        if(args[i] == '/') arg_exist = 1;
+    }
+
+    if(arg_exist){
+        int8_t length_file_name;
+        for(length_file_name = cur_cmd_length - 1; length_file_name >= 0; --length_file_name){
+            if(cmd_buffer[length_file_name] == '/') break;
+        }
+        length_file_name++;
+        char file_path[MAX_CMD_LENGTH];
+        memcpy(file_path, (void*)cmd_buffer + 6, length_file_name - 7);
+        memset(saved_current_path, 0, MAX_CMD_LENGTH);
+        memcpy(saved_current_path, current_path, MAX_CMD_LENGTH);
+        memcpy(name, (void*)cmd_buffer + length_file_name, cur_cmd_length - length_file_name);
+        uint8_t ret = multiple_cd(file_path, length_file_name - 7);
+        file_name_ext_len = cur_cmd_length - length_file_name;
+        if(ret != 0){
+            char disp = ret + '0';
+            syscall(6, (uint32_t) "Failed changing dir with code ", 30, 0xC);
+            syscall(5, (uint32_t)&disp, 0xC, 0);
+            memset(current_path, 0, MAX_CMD_LENGTH);
+            memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+            working_directory = saved_working_directory;
+            return;
+        }
+    }else{
+        memcpy(name, (void*)cmd_buffer + 6, cur_cmd_length - 6);
+        file_name_ext_len = cur_cmd_length - 6;
+    }
     char real_name[8];
     memset(real_name, 0, 8);
-    for (uint8_t i = 0; i < 8 && i < cur_cmd_length - 6; i++)
-    {
+    for(uint8_t i = 0; i < 8 && i < file_name_ext_len; i++){
         real_name[i] = name[i];
     }
-    struct ClusterBuffer cl[2] = {0};
+    if(strlen(real_name) == 4 && memcmp(real_name, "root", 4) == 0){
+        syscall(6, (uint32_t) "Cannot name folder 'root'", 25, 0xC);
+        return;
+    }
+    struct ClusterBuffer      cl   = {0};
     struct FAT32DriverRequest request = {
         .buf                   = &cl,
         .name                  = "\0\0\0\0\0\0\0",
@@ -342,18 +386,66 @@ void mkdir(){
     {
         syscall(6, (uint32_t) "Write failed", 12, 0xC);
     }
+    if(arg_exist){
+        memset(current_path, 0, MAX_CMD_LENGTH);
+        memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+        working_directory = saved_working_directory;
+        return;
+    }
 }
 
 void cat()
 {
     char name[MAX_CMD_LENGTH];
-    memcpy(name, (void *)cmd_buffer + 4, cur_cmd_length - 4);
+
+    uint8_t cmd_len = strlen(cmd_buffer);
+
+    if(cmd_len == 3){
+        syscall(6, (uint32_t) "No arguments!", 12, 0xC);
+        return;
+    }
+
+    char args[MAX_CMD_LENGTH];
+    memcpy(args, (void*)cmd_buffer + 4, cur_cmd_length - 4);
+    char saved_current_path[MAX_CMD_LENGTH];
+    uint32_t saved_working_directory = working_directory;
+    uint8_t arg_exist = 0;
+    uint8_t file_name_ext_len;
+    for(uint8_t i = 0; i < cur_cmd_length - 4 && !arg_exist; i++){
+        if(args[i] == '/') arg_exist = 1;
+    }
+
+    if(arg_exist){
+        int8_t length_file_name;
+        for(length_file_name = cur_cmd_length - 1; length_file_name >= 0; --length_file_name){
+            if(cmd_buffer[length_file_name] == '/') break;
+        }
+        length_file_name++;
+        char file_path[MAX_CMD_LENGTH];
+        memcpy(file_path, (void*)cmd_buffer + 4, length_file_name - 5);
+        memset(saved_current_path, 0, MAX_CMD_LENGTH);
+        memcpy(saved_current_path, current_path, MAX_CMD_LENGTH);
+        memcpy(name, (void*)cmd_buffer + length_file_name, cur_cmd_length - length_file_name);
+        uint8_t ret = multiple_cd(file_path, length_file_name - 5);
+        file_name_ext_len = cur_cmd_length - length_file_name;
+        if(ret != 0){
+            char disp = ret + '0';
+            syscall(6, (uint32_t) "Failed changing dir with code ", 30, 0xC);
+            syscall(5, (uint32_t)&disp, 0xC, 0);
+            memset(current_path, 0, MAX_CMD_LENGTH);
+            memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+            working_directory = saved_working_directory;
+            return;
+        }
+    }else{
+        memcpy(name, (void*)cmd_buffer + 4, cur_cmd_length - 4);
+        file_name_ext_len = cur_cmd_length - 4;
+    }
     char real_name[11];
     memset(real_name, 0, 11);
     uint8_t len_file_name = 0;
     int8_t len_pure_file_name = -1;
-    for (uint8_t i = 0; i < 11 && i < cur_cmd_length - 4; i++, len_file_name++)
-    {
+    for(uint8_t i = 0; i < 11 && i < file_name_ext_len; i++, len_file_name++){
         real_name[i] = name[i];
         if (real_name[i] == '.')
             len_pure_file_name = i;
@@ -380,40 +472,7 @@ void cat()
         .parent_cluster_number = working_directory,
         .buffer_size           = 0,
     };
-    char current_dir_name[8];
-    int8_t uu;
-    uint8_t current_path_length = strlen(current_path);
-    for(uu = current_path_length - 2; uu >= 0; --uu){
-        if(current_path[uu] == '/') break;
-    }
-    if (uu == -1)
-        uu++;
-    memset(current_dir_name, 0, 8);
-    uint8_t j;
-    for (j = 0; uu < current_path_length - 1 && j < 8; j++, uu++)
-    {
-        real_name[j] = current_path[uu];
-    }
-    memcpy(request.name, current_dir_name, 8);
-    int32_t retcode;
-    syscall(1, (uint32_t)&request, (uint32_t)&retcode, 0);
-    uint32_t filesize;
-    for (uint8_t i = 0; i < CLUSTER_SIZE / sizeof(struct FAT32DirectoryEntry); ++i)
-    {
-        if (current_dir.table[i].user_attribute != UATTR_NOT_EMPTY)
-        {
-            continue;
-        }
-        if (memcmp(current_dir.table[i].name, pure_file_name, 8) == 0)
-        {
-            if (current_dir.table[i].attribute != ATTR_SUBDIRECTORY && memcmp(current_dir.table[i].ext, pure_ext, 3) == 0)
-            {
-                filesize = current_dir.table[i].filesize;
-                break;
-            }
-        }
-    }
-    filesize /= CLUSTER_SIZE;
+    uint8_t retcode;
     struct ClusterBuffer clb[3] = {0};
     memset(&clb, 0, 3 * CLUSTER_SIZE);
     request.buf = &clb;
@@ -441,10 +500,12 @@ void cat()
         }
         syscall(6, (uint32_t)clb[0].buf, len, 0xF);
     }
-}
-
-void cp()
-{
+    if(arg_exist){
+        memset(current_path, 0, MAX_CMD_LENGTH);
+        memcpy(current_path, saved_current_path, MAX_CMD_LENGTH);
+        working_directory = saved_working_directory;
+        return;
+    }
 }
 
 void rm()
