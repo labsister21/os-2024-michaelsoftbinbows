@@ -5,6 +5,8 @@
 #define MAX_CMD_LENGTH 128
 
 int32_t change_dir(char *path, struct FAT32DirectoryTable);
+void find_file(char *name, struct FAT32DirectoryTable);
 
 void cd();
 void mkdir();
+void cp();
