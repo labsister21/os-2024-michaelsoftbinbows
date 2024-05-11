@@ -36,6 +36,7 @@ struct KeyboardDriverState {
     bool read_extended_mode;
     bool keyboard_input_on;
     char keyboard_buffer;
+    uint8_t template_length;
 } __attribute((packed));
 
 /* -- Driver Interfaces -- */
@@ -64,5 +65,9 @@ int get_keyboard_row(void);
 void puts(char*, uint8_t, uint8_t);
 
 void putchar(char, uint8_t);
+
+void change_keyboard_template_length(uint8_t);
+
+void clear_screen();
 
 #endif

@@ -101,5 +101,11 @@ void syscall(struct InterruptFrame frame) {
         case 7: 
             keyboard_state_activate();
             break;
+        case 19:
+            change_keyboard_template_length(*(uint8_t*)frame.cpu.general.ebx);
+            break;
+        case 69:
+            clear_screen();
+            break;
     }
 }
