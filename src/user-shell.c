@@ -901,7 +901,6 @@ int32_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
 
     if (strlen(path) >= 2 && memcmp(path, "..", 2) == 0) {
         if (working_directory != ROOT_CLUSTER_NUMBER) {
-            uint32_t parent_cluster_num = dir_table.table[1].cluster_high << 16 | dir_table.table[1].cluster_low;
             working_directory = parent_cluster_num;
             int n = strlen(current_path), i=n-1;
             for(; i > 4; i--){
