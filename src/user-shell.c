@@ -642,7 +642,128 @@ void find(){
 }
 
 void cp(){
-    
+    char buf[MAX_CMD_LENGTH];
+    memcpy(buf, (void*)cmd_buffer+3, cur_cmd_length-3);
+    int i = 0;
+    // parse for src and dest
+    char src[8];
+    memset(src, 0, 8);
+    for(int j=0; j < 8 && buf[i] != '.' && buf[i] != ' ' && buf[i] != '\0'; j++, i++){
+        src[j] = buf[i];
+    }
+    i++;
+    char src_ext[3];
+    memset(src_ext, 0, 3);
+    for(int j=0; j < 3 && buf[i] != ' ' && buf[i] != '\0'; j++, i++){
+        src_ext[j] = buf[i];
+    }
+    if (strlen(src_ext) > 0) i++;   
+
+    char dest[8];
+    memset(dest, 0, 8);
+    for(int k = 0; k < 8 && buf[i] != '.' && buf[i] != '\0' && buf[i] != ' '; k++, i++){
+        dest[k] = buf[i];
+    }
+    i++;
+    char dest_ext[3];
+    memset(dest_ext, 0, 3);
+    for(int k = 0; k < 3 && buf[i] != '\0' && buf[i] != ' '; k++, i++){
+        dest_ext[k] = buf[i];
+    }
+
+    // get current directory name
+    int l = strlen(current_path)-2;
+    for(; l > 0; l--){
+        if(current_path[l] == '/') break;
+    }
+    if (l != 0) l++;
+
+    char cur_dir[8];
+    memset(cur_dir, 0, 8);
+    for(int m = 0; current_path[l] != '/' && m < 8; m++, l++){
+        cur_dir[m] = current_path[l];
+    }
+
+    // get current directory table
+    struct FAT32DirectoryTable dir_table = {0};
+    struct FAT32DriverRequest request = {
+        .buf                   = &dir_table,
+        .name                  = "\0\0\0\0\0\0\0",
+        .ext                   = "\0\0",
+        .parent_cluster_number = working_directory,
+        .buffer_size           = sizeof(struct FAT32DirectoryTable),
+    };
+    memcpy(request.name, cur_dir, 8);
+
+    int8_t retcode;
+    syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
+    if (retcode != 0) {
+        syscall(6, (uint32_t) "Read dir failed", 16, 0xC);
+        return;
+    }
+
+    int found = 0;
+    struct ClusterBuffer cl[1] = {0};
+    struct FAT32DriverRequest request2 = {
+        .buf                   = &cl,
+        .name                  = "\0\0\0\0\0\0\0",
+        .ext                   = "\0\0",
+        .parent_cluster_number = working_directory,
+        .buffer_size           = CLUSTER_SIZE,
+    };
+    memcpy(request2.name, src, 8);
+    memcpy(request2.ext, src_ext, 8);
+    for (int m = 2; m < 64; m++) {
+        if (
+            dir_table.table[m].user_attribute == UATTR_NOT_EMPTY
+            && dir_table.table[m].attribute != ATTR_SUBDIRECTORY 
+            && strcmp(src,dir_table.table[m].name) == 1 
+            && memcmp(src_ext,dir_table.table[m].ext,3) == 0
+            ) {
+            
+            uint32_t cluster_num = dir_table.table[m].cluster_high << 16 | dir_table.table[m].cluster_low;
+
+            request2.parent_cluster_number = cluster_num;
+            
+            uint8_t ret;
+            syscall(0, (uint32_t) &request2, (uint32_t) &ret, 0);
+
+            found = 1;
+        }
+    }
+
+    if (found != 1) {
+        syscall(6,(uint32_t) "Src not found", 13, 0xC);
+        return;
+    }
+
+    found = 0;
+    for (int n = 2; n < 64; n++) {
+        if (dir_table.table[n].user_attribute == UATTR_NOT_EMPTY 
+        && strcmp(dest,dir_table.table[n].name) == 1 
+        ) {
+            if ((strlen(dest_ext) > 0 && dir_table.table[n].attribute != ATTR_SUBDIRECTORY)
+            || (strlen(dest_ext) == 0 && dir_table.table[n].attribute == ATTR_SUBDIRECTORY) 
+            ) {
+                uint32_t cluster_num = dir_table.table[n].cluster_high << 16 | dir_table.table[n].cluster_low;
+
+                if (cluster_num == request2.parent_cluster_number) continue; // if not src file
+
+                request2.parent_cluster_number = cluster_num;
+
+                uint8_t ret;
+                syscall(2, (uint32_t) &request2, (uint32_t) &ret, 0);
+
+                found = 1;
+            }
+        }
+    }
+    if (found != 1) {
+        syscall(6,(uint32_t) "Dest not found", 14, 0xC);
+        return;
+    }
+
+    syscall(6, (uint32_t) "Copy success", 13, 0xA);
 }
 
 void clear(){
@@ -727,7 +848,6 @@ void template_print()
 
 int main(void)
 {
-    /*
     struct ClusterBuffer      cl[2]   = {0};
     struct FAT32DriverRequest request = {
         .buf                   = &cl,
