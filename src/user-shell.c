@@ -680,6 +680,12 @@ void findHelper(int prev,char* local_current_path, uint32_t local_working_direct
     for(j = 0; i < current_path_length - 1 && j < 8; j++, i++){
         real_name[j] = local_current_path[i];
     }
+    for (int i = 2; i < 64; i++) {
+            if (cl.table[i].user_attribute == UATTR_NOT_EMPTY && cl.table[i].attribute == ATTR_SUBDIRECTORY && strcmp(real_name,cl.table[i].name) == 1) {
+                local_working_directory = cl.table[i].cluster_high << 16 | cl.table[i].cluster_low;
+                break;
+            }
+        }
     struct FAT32DriverRequest request = {
         .buf                   = &cl,
         .name                  = "\0\0\0\0\0\0\0",
@@ -691,6 +697,7 @@ void findHelper(int prev,char* local_current_path, uint32_t local_working_direct
     char slashN = '\n';
     char dot = '.';
     int32_t retcode;
+    retcode = 0;
     syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
     if(retcode == 0){
         memcpy(real_name, ((struct FAT32DirectoryTable*)request.buf)->table[1].name, 8);
