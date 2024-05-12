@@ -640,7 +640,7 @@ void mv()
     int cpRetcode = cp();
     if (cpRetcode == 0){
         rm();
-        syscall(6, (uint32_t) "move success!", 10, 0xA);
+        syscall(6, (uint32_t) "move success!", 14, 0xA);
     }
     else{
         switch (cpRetcode)
