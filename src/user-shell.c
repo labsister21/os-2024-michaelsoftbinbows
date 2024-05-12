@@ -333,7 +333,36 @@ void mkdir(){
     }
 }
 
-void cp(){
+void cpCaller()
+{
+    int retcode = cp();
+    switch (retcode)
+    {
+    case 0:
+        syscall(6, (uint32_t) "Copy success", 13, 0xA);
+        break;
+    case 1:
+        syscall(6, (uint32_t) "Read dir failed", 16, 0xC);
+        break;
+    case 2:
+        syscall(6,(uint32_t) "Src not found", 13, 0xC);
+        break;
+    case 3:
+        syscall(6,(uint32_t) "Write failed", 13, 0xC);
+        break;
+    case 4:
+        syscall(6,(uint32_t) "Dest not found", 14, 0xC);
+        break;
+    case 5:
+        syscall(6,(uint32_t) "Write failed", 13, 0xC);
+        break;
+    default:
+        break;
+    }
+    
+}
+
+int cp(){
     char buf[MAX_CMD_LENGTH];
     memcpy(buf, (void*)cmd_buffer+3, cur_cmd_length-3);
     int i = 0;
@@ -390,8 +419,7 @@ void cp(){
     int8_t retcode;
     syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
     if (retcode != 0) {
-        syscall(6, (uint32_t) "Read dir failed", 16, 0xC);
-        return;
+        return 1;
     }
 
     struct ClusterBuffer cl[3] = {0};
@@ -408,8 +436,7 @@ void cp(){
     syscall(0, (uint32_t) &request2, (uint32_t) &ret, 0);
 
     if (ret != 0) {
-        syscall(6,(uint32_t) "Src not found", 13, 0xC);
-        return;
+        return 2;
     }
 
     if (strlen(dest_ext) == 0) {
@@ -429,16 +456,14 @@ void cp(){
                 syscall(2, (uint32_t) &request2, (uint32_t) &ret, 0);
 
                 if (ret != 0) {
-                    syscall(6,(uint32_t) "Write failed", 13, 0xC);
-                    return;
+                    return 3;
                 }
 
                 found = 1;
             }
         }
         if (found != 1) {
-            syscall(6,(uint32_t) "Dest not found", 14, 0xC);
-            return;
+            return 4;
         }
     }
     else {
@@ -448,12 +473,12 @@ void cp(){
         syscall(2, (uint32_t) &request2, (uint32_t) &ret, 0);
 
         if (ret != 0) {
-            syscall(6,(uint32_t) "Write failed", 13, 0xC);
-            return;
+            return 5;
         }
     }
 
-    syscall(6, (uint32_t) "Copy success", 13, 0xA);
+    
+    return 0;
 }
 
 void cat()
@@ -555,7 +580,8 @@ void cat()
     }
 }
 
-void rm()
+
+int32_t rm()
 {
     // struct ClusterBuffer cl[2];
     struct FAT32DriverRequest request = {
@@ -584,6 +610,12 @@ void rm()
     memcpy(request.name, (void *)(cmd_buffer + 3), nameLen);
     int32_t retcode;
     syscall(3, (uint32_t)&request, (uint32_t)&retcode, 0);
+    return retcode;
+}
+
+void rmCaller()
+{
+    int retcode = rm();
     if (retcode == 0)
     {
         syscall(6, (uint32_t) "Delete Succeeded !!! ", 21, 0xA);
@@ -604,11 +636,38 @@ void rm()
 
 void mv()
 {
-
+    // what the fuck?
+    int cpRetcode = cp();
+    if (cpRetcode == 0){
+        rm();
+        syscall(6, (uint32_t) "move success!", 10, 0xA);
+    }
+    else{
+        switch (cpRetcode)
+        {
+            case 1:
+                syscall(6, (uint32_t) "Read dir failed", 16, 0xC);
+                break;
+            case 2:
+                syscall(6,(uint32_t) "Src not found", 13, 0xC);
+                break;
+            case 3:
+                syscall(6,(uint32_t) "Write failed", 13, 0xC);
+                break;
+            case 4:
+                syscall(6,(uint32_t) "Dest not found", 14, 0xC);
+                break;
+            case 5:
+                syscall(6,(uint32_t) "Write failed", 13, 0xC);
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 
-void findHelper(char* target_name,char* local_current_path, uint32_t local_working_directory, struct FAT32DirectoryTable cl){
+void findHelper(int prev,char* local_current_path, uint32_t local_working_directory, struct FAT32DirectoryTable cl){
     char real_name[8];
     int8_t i;
     uint8_t current_path_length = strlen(local_current_path);
@@ -642,9 +701,10 @@ void findHelper(char* target_name,char* local_current_path, uint32_t local_worki
             if(cl.table[i].user_attribute == UATTR_NOT_EMPTY){
                 uint8_t j;
                 for(j = 0; j < 8 && cl.table[i].name[j] != '\0'; j++){}
-                if(strcmp(cl.table[i].name,target_name)){
-                    syscall(6, (uint32_t)local_current_path, strlen(local_current_path), 0x9);
-                    syscall(6, (uint32_t)target_name, j, 0x9);
+                    char* trimmed_current_path = &local_current_path[prev];
+                    syscall(6, (uint32_t)"./", j, 0x9);
+                    syscall(6, (uint32_t)trimmed_current_path, strlen(trimmed_current_path), 0x9);
+                    syscall(6, (uint32_t)cl.table[i].name, j, 0x9);
                     if(cl.table[i].attribute != ATTR_SUBDIRECTORY){
                         uint8_t k;
                         for(k = 0; k < 3 && cl.table[i].ext[k] != '\0'; k++){}
@@ -652,12 +712,11 @@ void findHelper(char* target_name,char* local_current_path, uint32_t local_worki
                         syscall(6, (uint32_t)cl.table[i].ext, k, 0x9);
                     }
                     syscall(5,(uint32_t)&slashN,0x9,0);
-                }
                 char path[MAX_CMD_LENGTH];
                 strcat(path,local_current_path);
                 strcat(path,cl.table[i].name);
                 strcat(path,"/");
-                findHelper(target_name,path,local_working_directory,cl);
+                findHelper(prev,path,local_working_directory,cl);
                 memset(path,0,MAX_CMD_LENGTH);
             }
         }
@@ -665,23 +724,12 @@ void findHelper(char* target_name,char* local_current_path, uint32_t local_worki
 }
 
 void find(){
-    uint8_t cmd_len = strlen(cmd_buffer);
-    if(cmd_len>5){
-        char name[MAX_CMD_LENGTH];
-        memcpy(name, (void*)cmd_buffer + 5, cur_cmd_length - 5);
-        char target_name[9];
-        memset(target_name, 0, 9);
-        for(uint8_t i = 0; i < 9 && i < cur_cmd_length - 5; i++){
-            target_name[i] = name[i];
-        }
         struct FAT32DirectoryTable      cl   = {0};
-        char local_current_path[128] = "root/";
-        uint32_t local_working_directory = 2; 
-        findHelper(target_name,local_current_path,local_working_directory,cl);
-    }
-    else{
-        syscall(6,(uint32_t)"Usage : find <file name>",25,0xC);
-    }
+        char local_current_path[128];
+        memset(local_current_path,0,128);
+        strcpy(local_current_path,current_path);
+        int current_path_length = strlen(local_current_path); 
+        findHelper(current_path_length,local_current_path,working_directory,cl);
 }
 
 void clear(){
@@ -718,11 +766,11 @@ void exec()
     }
     else if (cmd_length == 2 && memcmp(command, "cp", 2) == 0)
     {
-        cp();
+        cpCaller();
     }
     else if (cmd_length == 2 && memcmp(command, "rm", 2) == 0)
     {
-        rm();
+        rmCaller();
     }
     else if (cmd_length == 2 && memcmp(command, "mv", 2) == 0)
     {
@@ -829,7 +877,7 @@ int32_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
                 current_path[i] = '\0';
             }
             memset(path, 0, 8);
-            memcpy(path, dir_table.table[1].name, 8);
+            memcpy(path, dir_table.table[1].name, strlen(dir_table.table[1].name));
             return 0;
         }
     }

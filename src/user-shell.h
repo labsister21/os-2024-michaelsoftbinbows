@@ -9,4 +9,11 @@ void find_file(char *name, struct FAT32DirectoryTable);
 
 void cd();
 void mkdir();
-void cp();
+int cp();
+int rm();
+void find();
+void cat();
+void ls();
+void clear();
+void cpCaller();
+void rmCaller();
