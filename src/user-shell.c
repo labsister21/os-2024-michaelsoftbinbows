@@ -394,48 +394,30 @@ void cp(){
         return;
     }
 
-    int found = 0;
-    struct ClusterBuffer cl[1] = {0};
+    struct ClusterBuffer cl[3] = {0};
     struct FAT32DriverRequest request2 = {
         .buf                   = &cl,
         .name                  = "\0\0\0\0\0\0\0",
         .ext                   = "\0\0",
         .parent_cluster_number = working_directory,
-        .buffer_size           = CLUSTER_SIZE,
+        .buffer_size           = 3*CLUSTER_SIZE,
     };
     memcpy(request2.name, src, 8);
-    memcpy(request2.ext, src_ext, 8);
-    for (int m = 2; m < 64; m++) {
-        if (
-            dir_table.table[m].user_attribute == UATTR_NOT_EMPTY
-            && dir_table.table[m].attribute != ATTR_SUBDIRECTORY 
-            && strcmp(src,dir_table.table[m].name) == 1 
-            && memcmp(src_ext,dir_table.table[m].ext,3) == 0
-            ) {
-            
-            uint32_t cluster_num = dir_table.table[m].cluster_high << 16 | dir_table.table[m].cluster_low;
+    memcpy(request2.ext, src_ext, 3);
+    uint8_t ret;
+    syscall(0, (uint32_t) &request2, (uint32_t) &ret, 0);
 
-            request2.parent_cluster_number = cluster_num;
-            
-            uint8_t ret;
-            syscall(0, (uint32_t) &request2, (uint32_t) &ret, 0);
-
-            found = 1;
-        }
-    }
-
-    if (found != 1) {
+    if (ret != 0) {
         syscall(6,(uint32_t) "Src not found", 13, 0xC);
         return;
     }
 
-    found = 0;
-    for (int n = 2; n < 64; n++) {
-        if (dir_table.table[n].user_attribute == UATTR_NOT_EMPTY 
-        && strcmp(dest,dir_table.table[n].name) == 1 
-        ) {
-            if ((strlen(dest_ext) > 0 && dir_table.table[n].attribute != ATTR_SUBDIRECTORY)
-            || (strlen(dest_ext) == 0 && dir_table.table[n].attribute == ATTR_SUBDIRECTORY) 
+    if (strlen(dest_ext) == 0) {
+        int found = 0;
+        for (int n = 2; n < 64; n++) {
+            if (dir_table.table[n].user_attribute == UATTR_NOT_EMPTY 
+            && strcmp(dest,dir_table.table[n].name) == 1 
+            && dir_table.table[n].attribute == ATTR_SUBDIRECTORY
             ) {
                 uint32_t cluster_num = dir_table.table[n].cluster_high << 16 | dir_table.table[n].cluster_low;
 
@@ -446,13 +428,29 @@ void cp(){
                 uint8_t ret;
                 syscall(2, (uint32_t) &request2, (uint32_t) &ret, 0);
 
+                if (ret != 0) {
+                    syscall(6,(uint32_t) "Write failed", 13, 0xC);
+                    return;
+                }
+
                 found = 1;
             }
         }
+        if (found != 1) {
+            syscall(6,(uint32_t) "Dest not found", 14, 0xC);
+            return;
+        }
     }
-    if (found != 1) {
-        syscall(6,(uint32_t) "Dest not found", 14, 0xC);
-        return;
+    else {
+        memcpy(request2.name, dest, 8);
+        memcpy(request2.ext, dest_ext, 3);
+        uint8_t ret;
+        syscall(2, (uint32_t) &request2, (uint32_t) &ret, 0);
+
+        if (ret != 0) {
+            syscall(6,(uint32_t) "Write failed", 13, 0xC);
+            return;
+        }
     }
 
     syscall(6, (uint32_t) "Copy success", 13, 0xA);
@@ -820,7 +818,6 @@ int32_t change_dir(char *path, struct FAT32DirectoryTable dir_table) {
         memcpy(path, dir_table.table[0].name, 8);
         return 0;
     }
-    uint32_t parent_cluster_num = dir_table.table[1].cluster_high << 16 | dir_table.table[1].cluster_low;
 
     if (strlen(path) >= 2 && memcmp(path, "..", 2) == 0) {
         if (working_directory != ROOT_CLUSTER_NUMBER) {
