@@ -84,3 +84,24 @@ int strcmp(const char *str1, const char *str2) {
     
     return 1;
 }
+
+
+int strstr(const char* haystack, const char* needle) {
+    if (*needle == '\0') {
+        return 1;
+    }
+    for (const char* h = haystack; *h != '\0'; h++) {
+        if (*h == *needle) {
+            const char* n = needle;
+            const char* h2 = h;
+            while (*h2 != '\0' && *n != '\0' && *h2 == *n) {
+                h2++;
+                n++;
+            }
+            if (*n == '\0') {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
