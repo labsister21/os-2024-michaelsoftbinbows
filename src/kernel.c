@@ -37,14 +37,14 @@ void kernel_setup(void)
 
     struct ClusterBuffer clb = {0};
 
-    char *uwu = "AAAAA\nAAAAA\nAAAA";
+    char *uwu = "Soyuz nerushimyy respublik svobodnykh\nSplotila naveki velikaya Rus'.\nDa zdravstvuyet sozdannyy voley narodov\nYedinyy, moguchiy Sovetskiy Soyuz!";
 
     memset(clb.buf, 0, CLUSTER_SIZE);
-    memcpy(clb.buf, uwu, 17);
+    memcpy(clb.buf, uwu, 146);
 
     struct FAT32DriverRequest write_req = {
         .buf = clb.buf,
-        .name = "aaa\0\0\0\0",
+        .name = "soyuz\0\0\0",
         .ext = "\0\0\0",
         .parent_cluster_number = ROOT_CLUSTER_NUMBER,
         .buffer_size = sizeof(struct ClusterBuffer)};
