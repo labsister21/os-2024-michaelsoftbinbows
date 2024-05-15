@@ -13,6 +13,7 @@
         "keyboard.h": "c",
         "framebuffer.h": "c",
         "user-shell.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "process.h": "c"
     },
 }
