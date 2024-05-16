@@ -29,6 +29,7 @@ void kernel_setup(void)
 
     // Untuk context belum aku initialize, baca chapter 3.1.3.3. Context Initialization
     _process_list[0].context.page_directory_virtual_addr = &_paging_kernel_page_directory;
+    // _process_list[0].context.cpu = 
     paging_allocate_user_page_frame(_process_list[0].context.page_directory_virtual_addr, (uint8_t *)0);
 
     // Write shell into memory

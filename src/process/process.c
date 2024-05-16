@@ -53,8 +53,10 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     // Process PCB 
     int32_t p_index = process_list_get_inactive_index();
     struct ProcessControlBlock *new_pcb = &(_process_list[p_index]);
-
+    new_pcb->context.page_directory_virtual_addr = paging_create_new_page_directory();
+    new_pcb->context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;
     new_pcb->metadata.pid = process_generate_new_pid();
+    new_pcb->metadata.state = Ready;
     process_manager_state.active_process_count++;
 
 exit_cleanup:
