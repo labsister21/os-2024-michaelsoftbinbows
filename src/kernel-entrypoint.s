@@ -107,3 +107,36 @@ set_tss_register:
     mov ax, 0x28 | 0 ; GDT TSS Selector, ring 0
     ltr ax
     ret
+
+global process_context_switch
+; Load struct Context (CPU GP-register) then jump
+; Function Signature: void process_context_switch(struct Context ctx);
+process_context_switch:
+    mov  eax, 0x20 | 0x3
+    mov  ds, ax
+    mov  es, ax
+    mov  fs, ax
+    mov  gs, ax
+
+    ; Using iret (return instruction for interrupt) technique for privilege change
+    ; Stack values will be loaded into these register:
+    ; [esp] -> eip, [esp+4] -> cr3, [esp+8] -> eflags, [esp+...] -> registers
+    lea  ecx, [esp+0x04] ; Save the base address for struct Context ctx
+    ; brute force magic
+    push dword [ebp-0x20]
+    push dword [ebp-0x24]
+    push dword [ebp-0x28]
+    push dword [ebp-0x2c]
+    push dword [ebp-0x30]
+    push dword [ebp-0x34]
+    push dword [ebp-0x38]
+    push dword [ebp-0x3c]
+    push dword [ebp-0x40]
+    push dword [ebp-0x44]
+    push dword [ebp-0x48]
+    push dword [ebp-0x4c]
+    push dword [ebp-0x14] ; cr3
+    push dword [ebp-0x18] ; eflags
+    push dword [ebp-0x1c] ; eip
+
+    iret
