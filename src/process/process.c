@@ -50,8 +50,6 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
         goto exit_cleanup;
     }
 
-    // _process_list[0].context.page_directory_virtual_addr = &_paging_kernel_page_directory;
-    // paging_allocate_user_page_frame(_process_list[0].context.page_directory_virtual_addr, (uint8_t *)0);
     int32_t p_index = process_list_get_inactive_index();
     struct PageDirectory *new_page =  paging_create_new_page_directory();
     struct ProcessControlBlock *new_pcb = &(_process_list[p_index]);
@@ -63,7 +61,10 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
         new_pcb->memory.virtual_addr_used[i] = virtual_addr;
     }
     new_pcb->memory.page_frame_used_count = page_frame_count_needed;
-    
+    if(p_index==0){
+        new_pcb->context.page_directory_virtual_addr = &_paging_kernel_page_directory;
+        paging_allocate_user_page_frame(&_paging_kernel_page_directory,(uint8_t*)0);
+    }
     new_pcb->context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;
     new_pcb->context.cpu.segment.ds = GDT_USER_DATA_SEGMENT_SELECTOR;
     new_pcb->context.cpu.segment.es = GDT_USER_DATA_SEGMENT_SELECTOR;
@@ -73,9 +74,6 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     new_pcb->metadata.pid = process_generate_new_pid();
     new_pcb->metadata.state = Ready;
     process_manager_state.active_process_count++;
-    
-    _process_list[p_index].context.page_directory_virtual_addr = &_paging_kernel_page_directory;
-    paging_allocate_user_page_frame(_process_list[p_index].context.page_directory_virtual_addr, (uint8_t *)0);
     read(request);
 
 exit_cleanup:
