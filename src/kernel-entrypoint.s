@@ -112,6 +112,11 @@ global process_context_switch
 ; Load struct Context (CPU GP-register) then jump
 ; Function Signature: void process_context_switch(struct Context ctx);
 process_context_switch:
+    mov gs, word [esp+36]
+    mov fs, word [esp+40]
+    mov es, word [esp+44]
+    mov ds, word [esp+48]
+
     ; Using iret (return instruction for interrupt) technique for privilege change
     ; Stack values will be loaded into these register:
     ; [esp] -> eip, [esp+4] -> cs?, [esp+8] -> eflags, [] -> process esp, [] -> process ss?
@@ -119,7 +124,7 @@ process_context_switch:
     mov  eax, 0x20 | 0x3 ; some requirement for stack manipulation (why 23?)
     push eax ; Stack segment selector (GDT_USER_DATA_SELECTOR), user privilege
     mov  eax, [ecx+12] ; esp
-    sub  eax, 0x04
+    ; sub  eax, 0x04
     push eax ; User space stack pointer (esp), move it into last 4 MiB
     mov  eax, [ecx+52]
     push eax ; eflags register state, when jump inside user program
@@ -136,22 +141,9 @@ process_context_switch:
     mov edi, [ecx+0] ; edi
     mov esi, [ecx+4] ; esi
     mov ebp, [ecx+8] ; ebp
-    mov ebx, [esp+16] ; ebx
-    mov edx, [esp+20] ; edx
-    mov ecx, [esp+24] ; ecx
-    ; mov eax, [esp+36] ; gs
-    ; mov gs, ax
-    ; mov eax, [esp+40] ; fs
-    ; mov fs, ax
-    ; mov eax, [esp+44] ; es
-    ; mov es, ax
-    ; mov eax, [esp+48] ; ds
-    ; mov ds, ax
-    mov eax, 0x20
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov eax, [esp+28] ; eax
+    mov ebx, [ecx+16] ; ebx
+    mov edx, [ecx+20] ; edx
+    mov ecx, [ecx+24] ; ecx
+    mov eax, [ecx+28] ; eax
 
     iret

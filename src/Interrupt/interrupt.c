@@ -48,6 +48,14 @@ void main_interrupt_handler(struct InterruptFrame frame)
     switch (frame.int_number)
     {
     case (0x20):
+        struct Context cur_context;
+        cur_context.cpu = frame.cpu;
+        cur_context.eflags = frame.int_stack.eflags;
+        cur_context.eip = frame.int_stack.eip;
+        cur_context.page_directory_virtual_addr = paging_get_current_page_directory_addr();
+        scheduler_save_context_to_current_running_pcb(cur_context);
+
+        pic_ack(IRQ_TIMER);
         scheduler_switch_to_next_process();
         break;
     case (0x21):

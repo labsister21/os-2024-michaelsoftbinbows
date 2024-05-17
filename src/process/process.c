@@ -5,21 +5,14 @@
 
 struct ProcessManagerState process_manager_state = { 
     .active_process_count = 0,
-    .current_process_id = -1
 };
 
 struct ProcessControlBlock _process_list[PROCESS_COUNT_MAX];
 
-static uint32_t current_pid = 0;
+int32_t current_pid = -1;
 
 int32_t process_list_get_inactive_index() {
-    // for (int32_t i = 0; i < PROCESS_COUNT_MAX; i++) {
-    //     if (_process_list[i].metadata.state != Running) {
-    //         return i;
-    //     }
-    // }
-    // return -1;
-    return (uint32_t) process_manager_state.active_process_count;
+    return current_pid+1;
 }
 
 uint32_t process_generate_new_pid(){
@@ -51,7 +44,7 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     }
 
     int32_t p_index = process_list_get_inactive_index();
-    struct PageDirectory *new_page =  paging_create_new_page_directory();
+    struct PageDirectory *new_page = paging_create_new_page_directory();
     struct ProcessControlBlock *new_pcb = &(_process_list[p_index]);
     new_pcb->context.page_directory_virtual_addr = new_page;
 
@@ -62,11 +55,22 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     }
     new_pcb->memory.page_frame_used_count = page_frame_count_needed;
     new_pcb->context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;
-    new_pcb->context.cpu.segment.ds = GDT_USER_DATA_SEGMENT_SELECTOR;
-    new_pcb->context.cpu.segment.es = GDT_USER_DATA_SEGMENT_SELECTOR;
-    new_pcb->context.cpu.segment.fs = GDT_USER_DATA_SEGMENT_SELECTOR;
-    new_pcb->context.cpu.segment.gs = GDT_USER_DATA_SEGMENT_SELECTOR;
+    new_pcb->context.cpu.segment.ds = GDT_USER_DATA_SEGMENT_SELECTOR | 0x3;
+    new_pcb->context.cpu.segment.es = GDT_USER_DATA_SEGMENT_SELECTOR | 0x3;
+    new_pcb->context.cpu.segment.fs = GDT_USER_DATA_SEGMENT_SELECTOR | 0x3;
+    new_pcb->context.cpu.segment.gs = GDT_USER_DATA_SEGMENT_SELECTOR | 0x3;
     new_pcb->context.cpu.stack.esp = PAGE_FRAME_SIZE;
+
+    new_pcb->context.cpu.index.edi = 0;
+    new_pcb->context.cpu.index.esi = 0;
+    new_pcb->context.cpu.stack.ebp = 0;
+    new_pcb->context.cpu.stack.esp = 0x400000 - 4;
+
+    new_pcb->context.cpu.general.ebx = 0;
+    new_pcb->context.cpu.general.edx = 0;
+    new_pcb->context.cpu.general.ecx = 0;
+    new_pcb->context.cpu.general.eax = 0;
+
     new_pcb->metadata.pid = process_generate_new_pid();
     new_pcb->metadata.state = Ready;
     process_manager_state.active_process_count++;
