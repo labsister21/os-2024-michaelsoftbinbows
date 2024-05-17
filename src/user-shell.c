@@ -827,6 +827,10 @@ void clear(){
     syscall(69,0,0,0);
 }
 
+void testing(){
+    syscall(666,0,0,0);
+}
+
 void exec()
 {
     char command[MAX_CMD_LENGTH];
@@ -872,6 +876,9 @@ void exec()
         find();
     }else if(cmd_length == 5 && memcmp(command, "clear", 5) == 0){
         clear();
+    }
+    else if(cmd_length == 3 && memcmp(command, "wow", 3) == 0){
+        testing();
     }else{
 
     }

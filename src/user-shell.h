@@ -17,3 +17,4 @@ void ls();
 void clear();
 void cpCaller();
 void rmCaller();
+void testing();
