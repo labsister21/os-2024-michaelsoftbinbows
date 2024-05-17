@@ -91,6 +91,12 @@ struct ProcessControlBlock {
 
 extern struct ProcessControlBlock _process_list[PROCESS_COUNT_MAX];
 
+struct ProcessManagerState {
+    int active_process_count;
+    int current_process_id;
+};
+
+extern struct ProcessManagerState process_manager_state;
 
 /**
  * Get currently running process PCB pointer

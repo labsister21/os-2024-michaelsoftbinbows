@@ -3,23 +3,23 @@
 #include "../header/stdlib/string.h"
 #include "../header/cpu/gdt.h"
 
-typedef struct {
-    int active_process_count;
-} ProcessManagerState;
-
-static ProcessManagerState process_manager_state = { .active_process_count = 0 };
+struct ProcessManagerState process_manager_state = { 
+    .active_process_count = 0,
+    .current_process_id = -1
+};
 
 struct ProcessControlBlock _process_list[PROCESS_COUNT_MAX];
 
 static uint32_t current_pid = 0;
 
 int32_t process_list_get_inactive_index() {
-    for (int32_t i = 0; i < PROCESS_COUNT_MAX; i++) {
-        if (_process_list[i].metadata.state != Running) {
-            return i;
-        }
-    }
-    return -1;
+    // for (int32_t i = 0; i < PROCESS_COUNT_MAX; i++) {
+    //     if (_process_list[i].metadata.state != Running) {
+    //         return i;
+    //     }
+    // }
+    // return -1;
+    return (uint32_t) process_manager_state.active_process_count;
 }
 
 uint32_t process_generate_new_pid(){
