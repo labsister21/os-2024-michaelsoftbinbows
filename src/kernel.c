@@ -10,6 +10,7 @@
 #include "header/stdlib/string.h"
 #include "header/paging/paging.h"
 #include "header/process/process.h"
+#include "header/scheduler/scheduler.h"
 #include <stdbool.h>
 
 void kernel_setup(void) {
@@ -37,6 +38,10 @@ void kernel_setup(void) {
 
     // Create & execute process 0
     process_create_user_process(request);
-    paging_use_page_directory(_process_list[0].context.page_directory_virtual_addr);
-    kernel_execute_user_program((void*) 0x0);
+    // paging_use_page_directory(_process_list[0].context.page_directory_virtual_addr);
+    // kernel_execute_user_program((void*) 0x0);
+
+    scheduler_init();
+    scheduler_switch_to_next_process();
+
 }

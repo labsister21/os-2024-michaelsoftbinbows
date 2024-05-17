@@ -77,6 +77,20 @@ exit_cleanup:
     return retcode;
 }
 
+/**
+ * Get currently running process PCB pointer
+ * 
+ * @return Will return NULL if there's no running process
+ */
+struct ProcessControlBlock* process_get_current_running_pcb_pointer(void) {
+    for (int i=0; i<PROCESS_COUNT_MAX; i++) {
+        if (_process_list[i].metadata.state == Running) {
+            return &_process_list[i];
+        }
+    }
+
+    return NULL;
+}
 
 // void process_context_initializer(){
 //     _process_list[0].context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;

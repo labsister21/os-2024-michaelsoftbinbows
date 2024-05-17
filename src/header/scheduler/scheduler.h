@@ -3,6 +3,7 @@
 
 #include "../process/process.h"
 #include "../stdlib/string.h"
+#include "../cpu/interrupt.h"
 
 /**
  * Read all general purpose register values and set control register.

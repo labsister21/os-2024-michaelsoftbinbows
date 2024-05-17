@@ -3,6 +3,7 @@
 #include "../header/driver/keyboard.h"
 #include "../header/cpu/gdt.h"
 #include "../header/filesystem/fat32.h"
+#include "../header/scheduler/scheduler.h"
 
 void io_wait(void)
 {
@@ -46,6 +47,9 @@ void main_interrupt_handler(struct InterruptFrame frame)
 {
     switch (frame.int_number)
     {
+    case (0x20):
+        scheduler_switch_to_next_process();
+        break;
     case (0x21):
         keyboard_isr();
         break;

@@ -66,7 +66,7 @@ segment_register_setup:
     ; Return to the code that got interrupted
     ; at this point, stack should be structured like this
     ; [esp], [esp+4], [esp+8]
-    ;   eip,   cs,    eflags
+    ; eip,   cs,    eflags
     ; Improper value will cause invalid return address & register
 
     iret
