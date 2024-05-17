@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "../header/paging/paging.h"
-
+#include <string.h>
 
 __attribute__((aligned(0x1000))) struct PageDirectory _paging_kernel_page_directory = {
     .table = {
@@ -21,7 +21,24 @@ __attribute__((aligned(0x1000))) struct PageDirectory _paging_kernel_page_direct
     }
 };
 
-__attribute__((aligned(0x1000))) static struct PageDirectory page_directory_list[PAGING_DIRECTORY_TABLE_MAX_COUNT] = {0};
+__attribute__((aligned(0x1000))) static struct PageDirectory page_directory_list[PAGING_DIRECTORY_TABLE_MAX_COUNT] = {
+    {
+        .table = {
+            [0] = {
+                .flag.present_bit       = 1,
+                .flag.read_write        = 1,
+                .flag.page_size         = 1,
+                .lower_address          = 0,
+            },
+            [0x300] = {
+                .flag.present_bit       = 1,
+                .flag.read_write        = 1,
+                .flag.page_size         = 1,
+                .lower_address          = 0,
+            },
+        }
+    }
+};
 
 static struct
     {
@@ -149,18 +166,17 @@ struct PageDirectory* paging_create_new_page_directory(void) {
             struct PageDirectory insert = 
             {
                 .table = {
-                    [0] = {
-                        .flag.present_bit       = 1,
-                        .flag.read_write        = 1,
-                        .flag.page_size         = 1,
-                        .lower_address          = 0,
-                    },
-                    [0x300] = _paging_kernel_page_directory.table[0x300],
+                            [0x300] = {
+            .flag.present_bit       = 1,
+            .flag.read_write        = 1,
+            .flag.page_size         = 1,
+            .lower_address          = 0,
+        },
                 }
             };
             // Asumsikan aman tidak perlu diclear untuk memory
             page_directory_manager.page_directory_used[i] = true;
-            page_directory_list[i] = insert;
+            memcpy(&page_directory_list[i],&insert,sizeof(struct PageDirectory));
             return &page_directory_list[i];
         }
     }
