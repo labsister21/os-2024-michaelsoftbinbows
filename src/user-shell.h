@@ -20,3 +20,4 @@ void rmCaller();
 void exec();
 void ps();
 void kill();
+void testing();

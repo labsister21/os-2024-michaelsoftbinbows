@@ -153,8 +153,23 @@ void syscall(struct InterruptFrame frame) {
         case 19:
             change_keyboard_template_length(*(uint8_t*)frame.cpu.general.ebx);
             break;
+        case 420:
+            testing(*((char*)frame.cpu.general.ebx));
+            break;
         case 69:
             clear_screen();
+            break;
+        case 666:
+            struct FAT32DriverRequest request = {
+            .buf                   = (uint8_t*) 0,
+            .name                  = "testing",
+            .ext                   = "\0\0\0",
+            .parent_cluster_number = ROOT_CLUSTER_NUMBER,
+            .buffer_size           = 0x100000,
+            };
+            process_create_user_process(request);
+            scheduler_init();
+            scheduler_switch_to_next_process();
             break;
     }
 }

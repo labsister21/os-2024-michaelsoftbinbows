@@ -151,3 +151,7 @@ void clear_screen(){
   keyboard_state.cursorColumn = 0;
   keyboard_state.cursorRow = -1;
 }
+
+void testing(char c){
+  framebuffer_write(24,79,c,0xA,0);
+}
