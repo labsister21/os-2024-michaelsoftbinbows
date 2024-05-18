@@ -880,11 +880,11 @@ void execute()
         find();
     }else if(cmd_length == 5 && memcmp(command, "clear", 5) == 0){
         clear();
-    }else if(cmd_length == 4 && memcmp(command, "exec", 5) == 0){
+    }else if(cmd_length == 4 && memcmp(command, "exec", 4) == 0){
         exec();
-    }else if(cmd_length == 2 && memcmp(command, "ps", 5) == 0){
+    }else if(cmd_length == 2 && memcmp(command, "ps", 2) == 0){
         ps();
-    }else if(cmd_length == 4 && memcmp(command, "kill", 5) == 0){
+    }else if(cmd_length == 4 && memcmp(command, "kill", 4) == 0){
         kill();
     }
     else if(cmd_length == 3 && memcmp(command, "wow", 3) == 0){

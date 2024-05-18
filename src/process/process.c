@@ -16,7 +16,7 @@ int32_t process_list_get_inactive_index() {
 }
 
 uint32_t process_generate_new_pid(){
-    return ++current_pid;
+    return ++process_manager_state.active_process_count;
 }
 
 uint32_t ceil_div(uint32_t numerator, uint32_t denominator) {
@@ -75,11 +75,11 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     new_pcb->metadata.state = Ready;
     memset(new_pcb->metadata.nama,0,8);
     memcpy(new_pcb->metadata.nama, request.name, 8);
-    process_manager_state.active_process_count++;
+    // process_manager_state.active_process_count++;
     paging_use_page_directory(new_page);
     read(request);
 
-exit_cleanup:
+    exit_cleanup:
     return retcode;
 }
 

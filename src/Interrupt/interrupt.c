@@ -168,8 +168,6 @@ void syscall(struct InterruptFrame frame) {
             .buffer_size           = 0x100000,
             };
             process_create_user_process(request);
-            scheduler_init();
-            scheduler_switch_to_next_process();
             break;
     }
 }
