@@ -80,6 +80,7 @@ struct ProcessControlBlock {
     struct {
         uint32_t pid;
         PROCESS_STATE state;
+        char nama[8];
     } metadata;
     struct {
         void     *virtual_addr_used[PROCESS_PAGE_FRAME_COUNT_MAX];

@@ -73,6 +73,8 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
 
     new_pcb->metadata.pid = process_generate_new_pid();
     new_pcb->metadata.state = Ready;
+    memset(new_pcb->metadata.nama,0,8);
+    memcpy(new_pcb->metadata.nama, request.name, 8);
     process_manager_state.active_process_count++;
     paging_use_page_directory(new_page);
     read(request);
@@ -87,13 +89,30 @@ exit_cleanup:
  * @return Will return NULL if there's no running process
  */
 struct ProcessControlBlock* process_get_current_running_pcb_pointer(void) {
-    for (int i=0; i<PROCESS_COUNT_MAX; i++) {
-        if (_process_list[i].metadata.state == Running) {
-            return &_process_list[i];
-        }
-    }
+    // for (int i=0; i<PROCESS_COUNT_MAX; i++) {
+    //     if (_process_list[i].metadata.state == Running) {
+    //         return &_process_list[i];
+    //     }
+    // }
 
-    return NULL;
+    if (current_pid == -1) {
+        return NULL;
+    } else {
+        return &_process_list[current_pid];
+    }
+}
+
+/**
+ * Destroy process then release page directory and process control block
+ * 
+ * @param pid Process ID to delete
+ * @return    True if process destruction success
+ */
+bool process_destroy(uint32_t pid) {
+    pid++;
+    // struct ProcessControlBlock* cur_pcb = &_process_list[pid];
+    // if (!paging_free_page_directory(cur_pcb->));
+    return false;
 }
 
 // void process_context_initializer(){

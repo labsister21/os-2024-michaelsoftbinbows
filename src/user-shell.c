@@ -445,7 +445,11 @@ int cp(){
 
     // cd to intended src path
     uint8_t ret1 = multiple_cd(src,strlen(src));
-    if (ret1 != 0) return 2; 
+    if (ret1 != 0) {
+        memcpy(current_path, save_path, MAX_CMD_LENGTH);
+        working_directory = save_directory;
+        return 2; 
+    }
 
     struct ClusterBuffer cl[3] = {0};
     struct FAT32DriverRequest request = {
@@ -827,7 +831,7 @@ void clear(){
     syscall(69,0,0,0);
 }
 
-void exec()
+void execute()
 {
     char command[MAX_CMD_LENGTH];
     int cmd_length = 0;
@@ -872,6 +876,12 @@ void exec()
         find();
     }else if(cmd_length == 5 && memcmp(command, "clear", 5) == 0){
         clear();
+    }else if(cmd_length == 4 && memcmp(command, "exec", 5) == 0){
+        exec();
+    }else if(cmd_length == 2 && memcmp(command, "ps", 5) == 0){
+        ps();
+    }else if(cmd_length == 4 && memcmp(command, "kill", 5) == 0){
+        kill();
     }else{
 
     }
@@ -934,7 +944,7 @@ int main(void) {
         if(buf){
             if(buf == '\n'){
                 syscall(5, (uint32_t)&buf, 0, 0);
-                exec();
+                execute();
                 template_print();
             }else if(buf == '\b'){
                 if (cur_cmd_length > 0) {
@@ -1000,5 +1010,94 @@ void find_file(char *name, struct FAT32DirectoryTable dir_table) {
 
             // return 0;
         }
+    }
+}
+
+void exec() {
+    char buf[MAX_CMD_LENGTH];
+    memset(buf, 0, MAX_CMD_LENGTH);
+    memcpy(buf, (void*)cmd_buffer+5, cur_cmd_length-5);
+    
+    char file[8];
+    memset(file, 0, 8);
+    int i = strlen(buf);
+    for (; i>0; i--) {
+        if (buf[i] == '/') break;
+    }
+    if (i != 0) i++;
+    for (int j=0; j < 8 && buf[i] != '\0'; j++, i++) {
+        file[j] = buf[i];
+        buf[i] = '\0';
+    }
+
+    uint32_t save_directory = working_directory;
+    char save_path[MAX_CMD_LENGTH];
+    memset(save_path, 0, MAX_CMD_LENGTH);
+    memcpy(save_path, current_path, MAX_CMD_LENGTH);
+
+    // cd to intended src path
+    uint8_t ret = multiple_cd(buf,strlen(buf));
+    if (ret != 0) {
+        memcpy(current_path, save_path, MAX_CMD_LENGTH);
+        working_directory = save_directory;
+        syscall(6, (uint32_t) "File not found", 15, 0xC);
+        return; 
+    }
+
+    struct FAT32DriverRequest request = {
+        .buf                   = (uint8_t*) 0,
+        .name                  = "shell",
+        .ext                   = "bin",
+        .parent_cluster_number = working_directory,
+        .buffer_size           = 0x100000,
+    };
+    memcpy(request.name, file, 8);
+
+    memcpy(current_path, save_path, MAX_CMD_LENGTH);
+    working_directory = save_directory;
+
+    uint8_t retcode = 5;
+    syscall(8, (uint32_t) &request, (uint32_t) retcode, 0);
+
+    switch (retcode)
+    {
+    case 0:
+        syscall(6, (uint32_t) "Exec success", 12, 0xA);
+        break;
+    case 1:
+        syscall(6, (uint32_t) "Max process exceeded", 21, 0xC);
+        break;
+    case 2:
+        syscall(6, (uint32_t) "Invalid entrypoint", 19, 0xC);
+        break;
+    case 3:
+        syscall(6, (uint32_t) "Not enough memory", 18, 0xC);
+        break;
+    case 4:
+        syscall(6, (uint32_t) "Read failure", 13, 0xC);
+        break;
+    }
+}
+
+void ps() {
+    syscall(9, 0, 0, 0);
+}
+
+void kill() {
+    char buf[MAX_CMD_LENGTH];
+    memset(buf, 0, MAX_CMD_LENGTH);
+    memcpy(buf, (void*)cmd_buffer+5, cur_cmd_length-5);
+    
+    char pid[2];
+    memset(pid,0,2);
+    memcpy(pid,buf,2);
+    
+    uint8_t retcode;
+    syscall(11, (uint32_t) pid, (uint32_t) &retcode, 0);
+
+    if (retcode == 0) {
+        syscall(6, (uint32_t) "Kill success", 12, 0xA);
+    } else {
+        syscall(6, (uint32_t) "Kill failed", 12, 0xA);
     }
 }

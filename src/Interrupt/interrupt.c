@@ -113,6 +113,43 @@ void syscall(struct InterruptFrame frame) {
         case 7: 
             keyboard_state_activate();
             break;
+        case 8:
+            *((int8_t*) frame.cpu.general.ecx) = process_create_user_process(*(struct FAT32DriverRequest*) frame.cpu.general.ebx);
+            break;
+        case 9:
+            for (int i=0; i < process_manager_state.active_process_count; i++) {
+                char disp = _process_list[i].metadata.pid + '0';
+                puts(_process_list[i].metadata.nama, (uint8_t) strlen(_process_list[i].metadata.nama), (uint8_t) 0xF);
+                putchar('-', (uint8_t) 0xF);
+                putchar(disp, (uint8_t) 0xF);
+                putchar('\n', (uint8_t) 0xF);
+            }
+            break;
+        case 10: // terminasi proses
+            // exit(0);
+            break;
+        case 11:
+            char buf[2];
+            memset(buf,0,2);
+            memcpy(buf,(char*) frame.cpu.general.ebx,2);
+
+            int pid;
+            if (strlen(buf) == 1) {
+                pid = (int) (buf[0]) + 0;
+            } else {
+                pid = (int) (buf[1]) + 0;
+                int puluhan = (int) (buf[0]) + 0;
+                pid += puluhan*10;
+            }
+            uint8_t retcode;
+            if (process_destroy((uint32_t) pid)) {
+                retcode = 0;
+            } else {
+                retcode = 1;
+            }
+
+            *((int8_t*) frame.cpu.general.ecx) = retcode;
+            break;
         case 19:
             change_keyboard_template_length(*(uint8_t*)frame.cpu.general.ebx);
             break;

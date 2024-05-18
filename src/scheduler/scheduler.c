@@ -14,7 +14,11 @@ void scheduler_init(void) {
  * @param ctx Context to save to current running process control block
  */
 void scheduler_save_context_to_current_running_pcb(struct Context ctx) {
-    _process_list[current_pid].context = ctx;
+    struct ProcessControlBlock* cur_pcb = &_process_list[current_pid];
+    cur_pcb->context.cpu = ctx.cpu;
+    cur_pcb->context.eflags = ctx.eflags;
+    cur_pcb->context.eip = ctx.eip;
+    cur_pcb->context.page_directory_virtual_addr = ctx.page_directory_virtual_addr;
 }
 
 /**

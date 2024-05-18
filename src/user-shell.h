@@ -17,3 +17,6 @@ void ls();
 void clear();
 void cpCaller();
 void rmCaller();
+void exec();
+void ps();
+void kill();
