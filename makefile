@@ -64,7 +64,7 @@ run: all
 all: build
 build: iso
 clean:
-	rm -rf *.o *.iso $(OUTPUT_FOLDER)/*.iso $(OUTPUT_FOLDER)/*.o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/inserter $(OUTPUT_FOLDER)/shell $(OUTPUT_FOLDER)/shell_elf $(OUTPUT_FOLDER)/*.bin
+	rm -rf *.o *.iso $(OUTPUT_FOLDER)/*.iso $(OUTPUT_FOLDER)/*.o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/inserter $(OUTPUT_FOLDER)/shell $(OUTPUT_FOLDER)/testing $(OUTPUT_FOLDER)/shell_elf $(OUTPUT_FOLDER)/testing_elf $(OUTPUT_FOLDER)/*.bin
 
 
 
