@@ -941,19 +941,19 @@ void template_print()
 
 int main(void) {
     // dummy file for testing
-    struct ClusterBuffer      cl   = {0};
-    char *owo = "KAAAAAA\n";
-    memset(cl.buf, 0, CLUSTER_SIZE);
-    memcpy(cl.buf, owo, 9);
-    struct FAT32DriverRequest request = {
-        .buf                   = &cl,
-        .name                  = "kaa\0",
-        .ext                   = "txt",
-        .parent_cluster_number = ROOT_CLUSTER_NUMBER,
-        .buffer_size           = sizeof(struct ClusterBuffer),
-    };
-    int8_t retcode;
-    syscall(2, (uint32_t) &request, (uint32_t) &retcode, 0);
+    // struct ClusterBuffer      cl   = {0};
+    // char *owo = "KAAAAAA\n";
+    // memset(cl.buf, 0, CLUSTER_SIZE);
+    // memcpy(cl.buf, owo, 9);
+    // struct FAT32DriverRequest request = {
+    //     .buf                   = &cl,
+    //     .name                  = "kaa\0",
+    //     .ext                   = "txt",
+    //     .parent_cluster_number = ROOT_CLUSTER_NUMBER,
+    //     .buffer_size           = sizeof(struct ClusterBuffer),
+    // };
+    // int8_t retcode;
+    // syscall(2, (uint32_t) &request, (uint32_t) &retcode, 0);
 
     syscall(7, 0, 0, 0);
     memset(cmd_buffer, 0, MAX_CMD_LENGTH);
@@ -1124,6 +1124,6 @@ void kill() {
     if (retcode == 0) {
         syscall(6, (uint32_t) "Kill success", 12, 0xA);
     } else {
-        syscall(6, (uint32_t) "Kill failed", 12, 0xA);
+        syscall(6, (uint32_t) "Kill failed", 12, 0xC);
     }
 }

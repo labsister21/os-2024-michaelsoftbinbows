@@ -122,12 +122,14 @@ void syscall(struct InterruptFrame frame) {
             *((int8_t*) frame.cpu.general.ecx) = process_create_user_process(*(struct FAT32DriverRequest*) frame.cpu.general.ebx);
             break;
         case 9:
-            for (int i=0; i < process_manager_state.active_process_count; i++) {
-                char disp = _process_list[i].metadata.pid + '0';
-                puts(_process_list[i].metadata.nama, (uint8_t) strlen(_process_list[i].metadata.nama), (uint8_t) 0xF);
-                putchar('-', (uint8_t) 0xF);
-                putchar(disp, (uint8_t) 0xF);
-                putchar('\n', (uint8_t) 0xF);
+            for (int i=0; i < PROCESS_COUNT_MAX; i++) {
+                if (_process_list[i].metadata.state != Inactive) {
+                    char disp = _process_list[i].metadata.pid + '0';
+                    puts(_process_list[i].metadata.nama, (uint8_t) strlen(_process_list[i].metadata.nama), (uint8_t) 0xF);
+                    putchar('-', (uint8_t) 0xF);
+                    putchar(disp, (uint8_t) 0xF);
+                    putchar('\n', (uint8_t) 0xF);
+                }  
             }
             break;
         case 10: // terminasi proses
@@ -140,12 +142,13 @@ void syscall(struct InterruptFrame frame) {
 
             int pid;
             if (strlen(buf) == 1) {
-                pid = (int) (buf[0]) + 0;
+                pid = (buf[0] - '0');
             } else {
-                pid = (int) (buf[1]) + 0;
-                int puluhan = (int) (buf[0]) + 0;
+                pid = (buf[0] - '0');
+                int puluhan = (buf[1] - '0');
                 pid += puluhan*10;
             }
+            
             uint8_t retcode;
             if (process_destroy((uint32_t) pid)) {
                 retcode = 0;

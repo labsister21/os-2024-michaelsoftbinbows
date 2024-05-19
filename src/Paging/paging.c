@@ -194,8 +194,8 @@ bool paging_free_page_directory(struct PageDirectory *page_dir) {
     int i;
     for(i=0;i<PAGING_DIRECTORY_TABLE_MAX_COUNT;i++){
         if(&page_directory_list[i]==page_dir){
+            memset(&page_directory_list[i],0,sizeof(struct PageDirectory)); // not sure bener atau enggaka :v
             page_directory_manager.page_directory_used[i] = false;
-            // Ga diclear, kalau masalah nanti baru diclear :v
             return true;
         }
     }

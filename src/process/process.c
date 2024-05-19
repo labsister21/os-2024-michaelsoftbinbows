@@ -12,11 +12,20 @@ struct ProcessControlBlock _process_list[PROCESS_COUNT_MAX];
 int32_t current_pid = -1;
 
 int32_t process_list_get_inactive_index() {
-    return process_manager_state.active_process_count;
+    for (int i=0; i<PROCESS_COUNT_MAX;i++) {
+        if (_process_list[i].metadata.state == Inactive) {
+            return i;
+        }
+    }
+
+    return PROCESS_COUNT_MAX; // should never happen, handled in process_create_user_process
 }
 
 uint32_t process_generate_new_pid(){
-    return process_manager_state.active_process_count++;
+    int32_t pid = process_list_get_inactive_index();
+    process_manager_state.active_process_count++;
+
+    return pid; // should never happen case when pid = PROCESS_COUNT_MAX, handled in process_create_user_process
 }
 
 uint32_t ceil_div(uint32_t numerator, uint32_t denominator) {
@@ -112,10 +121,25 @@ struct ProcessControlBlock* process_get_current_running_pcb_pointer(void) {
  * @return    True if process destruction success
  */
 bool process_destroy(uint32_t pid) {
-    pid++;
-    // struct ProcessControlBlock* cur_pcb = &_process_list[pid];
-    // if (!paging_free_page_directory(cur_pcb->));
-    return false;
+    if (_process_list[pid].metadata.state == Inactive) {
+        return false;
+    }
+
+    struct ProcessControlBlock* target_pcb = &_process_list[pid];
+    for (uint32_t i = 0; i < target_pcb->memory.page_frame_used_count; i++) {
+        void* virtual_addr = target_pcb->memory.virtual_addr_used[i];
+        paging_free_user_page_frame(target_pcb->context.page_directory_virtual_addr, virtual_addr);
+    }
+    if (!paging_free_page_directory(target_pcb->context.page_directory_virtual_addr)) {
+        for (uint32_t i = 0; i < target_pcb->memory.page_frame_used_count; i++) { // cancel free user page frame
+            void* virtual_addr = (void*) (i * PAGE_FRAME_SIZE);
+            paging_allocate_user_page_frame(target_pcb->context.page_directory_virtual_addr, virtual_addr);
+            target_pcb->memory.virtual_addr_used[i] = virtual_addr;
+        }
+        return false;
+    };
+    target_pcb->metadata.state = Inactive;
+    return true;
 }
 
 // void process_context_initializer(){
