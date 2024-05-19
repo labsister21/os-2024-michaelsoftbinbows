@@ -14,13 +14,8 @@
         "framebuffer.h": "c",
         "user-shell.h": "c",
         "stdint.h": "c",
-        "process.h": "c",
-        "scheduler.h": "c",
-        "*.tcc": "c",
-        "deque": "c",
-        "string": "c",
-        "unordered_map": "c",
-        "vector": "c",
-        "testing.h": "c"
+        "testing.h": "c",
+        "cmos.h": "c",
+        "clock.h": "c"
     },
 }

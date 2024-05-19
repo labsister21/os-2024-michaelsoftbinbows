@@ -155,3 +155,73 @@ void clear_screen(){
 void testing(char c){
   framebuffer_write(24,79,c,0xA,0);
 }
+
+char intToChar[]= {'0','1','2','3','4','5','6','7','8','9'};
+
+void printDigits(uint8_t number,uint8_t colPrint) {
+    // Calculate the number of digits
+    if(number != 0){
+    int temp = number;
+    int divisor = 1;
+    while (temp > 9) {
+        divisor *= 10;
+        temp /= 10;
+    }
+
+    // Print each digit
+    if(number > 9){
+    while (divisor > 0) {
+        int digit = number / divisor;
+        framebuffer_write(24,colPrint,intToChar[digit],0xA,0);
+        number %= divisor;
+        divisor /= 10;
+        colPrint++;
+    }
+    } else {
+      framebuffer_write(24,colPrint,intToChar[number],0xA,0);
+      framebuffer_write(24,colPrint+1,' ',0xA,0);
+    }
+     
+    } else{
+      framebuffer_write(24,colPrint,intToChar[0],0xA,0);
+      framebuffer_write(24,colPrint+1,' ',0xA,0);
+    }
+
+}
+
+void writeClock(uint8_t jam, uint8_t menit, uint8_t detik){
+  //uint8_t row, uint8_t col, char c, uint8_t fg, uint8_t bg
+  // char firstHour;
+  // char secondHour;
+
+  // char firstMinute;
+  // char secondMinute;
+
+  // char firstSecond;
+  // char secondSecond;
+
+  // //determine characters
+  // if(jam <10){
+  //   firstHour = '0';
+  //   secondHour =
+  // } else {
+
+  // }
+  // //print jam
+  // framebuffer_write(24,72,firstHour,0xA,0);
+  // framebuffer_write(24,73,secondHour,0xA,0);
+  // framebuffer_write(24,74,':',0xA,0);
+  // //print menit
+  // framebuffer_write(24,75,firstMinute,0xA,0);
+  // framebuffer_write(24,76,secondMinute,0xA,0);
+  // framebuffer_write(24,77,':',0xA,0);
+  // //print detik
+  // framebuffer_write(24,78,firstSecond,0xA,0);
+  // framebuffer_write(24,79,secondSecond,0xA,0);
+
+  printDigits(jam,72);
+  framebuffer_write(24,74,':',0xA,0);
+  printDigits(menit,75);
+  framebuffer_write(24,77,':',0xA,0);
+  printDigits(detik,78);
+}

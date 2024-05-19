@@ -4,6 +4,7 @@
 #include "../header/cpu/gdt.h"
 #include "../header/filesystem/fat32.h"
 #include "../header/scheduler/scheduler.h"
+#include "../header/cmos/cmos.h"
 
 void io_wait(void)
 {
@@ -173,22 +174,22 @@ void syscall(struct InterruptFrame frame) {
             .name                  = "testing",
             .ext                   = "\0\0\0",
             .parent_cluster_number = ROOT_CLUSTER_NUMBER,
-            .buffer_size           = 0x100000,
-            };
-            process_create_user_process(request);
-            break;
+            .buffer_size = 0x100000,
+        };
+        process_create_user_process(request);
+        break;
     }
 }
 
-void activate_timer_interrupt(void) {
+void activate_timer_interrupt(void)
+{
     __asm__ volatile("cli");
     // Setup how often PIT fire
     uint32_t pit_timer_counter_to_fire = PIT_TIMER_COUNTER;
     out(PIT_COMMAND_REGISTER_PIO, PIT_COMMAND_VALUE);
-    out(PIT_CHANNEL_0_DATA_PIO, (uint8_t) (pit_timer_counter_to_fire & 0xFF));
-    out(PIT_CHANNEL_0_DATA_PIO, (uint8_t) ((pit_timer_counter_to_fire >> 8) & 0xFF));
+    out(PIT_CHANNEL_0_DATA_PIO, (uint8_t)(pit_timer_counter_to_fire & 0xFF));
+    out(PIT_CHANNEL_0_DATA_PIO, (uint8_t)((pit_timer_counter_to_fire >> 8) & 0xFF));
 
     // Activate the interrupt
     out(PIC1_DATA, in(PIC1_DATA) & ~(1 << IRQ_TIMER));
 }
-

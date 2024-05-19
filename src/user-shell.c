@@ -854,6 +854,10 @@ void testing(){
     syscall(666,0,0,0);
 }
 
+void testing2(){
+    syscall(667,0,0,0);
+}
+
 void execute()
 {
     char command[MAX_CMD_LENGTH];
@@ -908,6 +912,9 @@ void execute()
     }
     else if(cmd_length == 3 && memcmp(command, "wow", 3) == 0){
         testing();
+    }
+    else if(cmd_length == 5 && memcmp(command, "clock", 5) == 0){
+        testing2();
     }else{
 
     }
