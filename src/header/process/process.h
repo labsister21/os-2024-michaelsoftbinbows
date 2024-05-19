@@ -61,9 +61,10 @@ struct Context {
 };
 
 typedef enum PROCESS_STATE {
+    Inactive,
     Ready,
     Running,
-    Waiting
+    Waiting,
 } PROCESS_STATE;
 
 

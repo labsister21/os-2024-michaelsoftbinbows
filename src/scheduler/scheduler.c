@@ -27,12 +27,11 @@ void scheduler_save_context_to_current_running_pcb(struct Context ctx) {
  */
 __attribute__((noreturn)) void scheduler_switch_to_next_process(void) {
     struct Context next_context;
-    int context_id, num_active_process;
-    num_active_process = process_manager_state.active_process_count;
+    int context_id;
 
     context_id = current_pid+1; 
     while (context_id != current_pid) {
-        if (context_id >= num_active_process) {
+        if (context_id >= PROCESS_COUNT_MAX) {
             context_id=0;
         }
         if (_process_list[context_id].metadata.state == Ready) {

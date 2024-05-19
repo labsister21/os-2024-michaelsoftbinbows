@@ -12,11 +12,20 @@ struct ProcessControlBlock _process_list[PROCESS_COUNT_MAX];
 int32_t current_pid = -1;
 
 int32_t process_list_get_inactive_index() {
-    return current_pid+1;
+    for (int i=0; i<PROCESS_COUNT_MAX;i++) {
+        if (_process_list[i].metadata.state == Inactive) {
+            return i;
+        }
+    }
+
+    return PROCESS_COUNT_MAX; // should never happen, handled in process_create_user_process
 }
 
 uint32_t process_generate_new_pid(){
-    return ++process_manager_state.active_process_count;
+    int32_t pid = process_list_get_inactive_index();
+    process_manager_state.active_process_count++;
+
+    return pid; // should never happen case when pid = PROCESS_COUNT_MAX, handled in process_create_user_process
 }
 
 uint32_t ceil_div(uint32_t numerator, uint32_t denominator) {
@@ -53,6 +62,20 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
         paging_allocate_user_page_frame(new_page, virtual_addr);
         new_pcb->memory.virtual_addr_used[i] = virtual_addr;
     }
+    struct PageDirectory *curr_dir = paging_get_current_page_directory_addr();
+    paging_use_page_directory(new_page);
+    int8_t ret = read(request);
+    paging_use_page_directory(curr_dir);
+    if (ret != 0) {
+        for (uint32_t i = 0; i < page_frame_count_needed; i++) {
+            void* virtual_addr = new_pcb->memory.virtual_addr_used[i];
+            paging_free_user_page_frame(new_page, virtual_addr);
+        }
+
+        retcode = PROCESS_CREATE_FAIL_FS_READ_FAILURE;
+        goto exit_cleanup;
+    }
+    
     new_pcb->memory.page_frame_used_count = page_frame_count_needed;
     new_pcb->context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;
     new_pcb->context.cpu.segment.ds = GDT_USER_DATA_SEGMENT_SELECTOR | 0x3;
@@ -76,8 +99,6 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     memset(new_pcb->metadata.nama,0,8);
     memcpy(new_pcb->metadata.nama, request.name, 8);
     // process_manager_state.active_process_count++;
-    paging_use_page_directory(new_page);
-    read(request);
 
     exit_cleanup:
     return retcode;
@@ -109,10 +130,25 @@ struct ProcessControlBlock* process_get_current_running_pcb_pointer(void) {
  * @return    True if process destruction success
  */
 bool process_destroy(uint32_t pid) {
-    pid++;
-    // struct ProcessControlBlock* cur_pcb = &_process_list[pid];
-    // if (!paging_free_page_directory(cur_pcb->));
-    return false;
+    if (_process_list[pid].metadata.state == Inactive) {
+        return false;
+    }
+
+    struct ProcessControlBlock* target_pcb = &_process_list[pid];
+    for (uint32_t i = 0; i < target_pcb->memory.page_frame_used_count; i++) {
+        void* virtual_addr = target_pcb->memory.virtual_addr_used[i];
+        paging_free_user_page_frame(target_pcb->context.page_directory_virtual_addr, virtual_addr);
+    }
+    if (!paging_free_page_directory(target_pcb->context.page_directory_virtual_addr)) {
+        for (uint32_t i = 0; i < target_pcb->memory.page_frame_used_count; i++) { // cancel free user page frame
+            void* virtual_addr = (void*) (i * PAGE_FRAME_SIZE);
+            paging_allocate_user_page_frame(target_pcb->context.page_directory_virtual_addr, virtual_addr);
+            target_pcb->memory.virtual_addr_used[i] = virtual_addr;
+        }
+        return false;
+    };
+    target_pcb->metadata.state = Inactive;
+    return true;
 }
 
 // void process_context_initializer(){
