@@ -1073,7 +1073,7 @@ void exec() {
     struct FAT32DriverRequest request = {
         .buf                   = (uint8_t*) 0,
         .name                  = "shell",
-        .ext                   = "bin",
+        .ext                   = "\0\0\0",
         .parent_cluster_number = working_directory,
         .buffer_size           = 0x100000,
     };
@@ -1083,7 +1083,7 @@ void exec() {
     working_directory = save_directory;
 
     uint8_t retcode = 5;
-    syscall(8, (uint32_t) &request, (uint32_t) retcode, 0);
+    syscall(8, (uint32_t) &request, (uint32_t) &retcode, 0);
 
     switch (retcode)
     {

@@ -64,8 +64,17 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     }
     struct PageDirectory *curr_dir = paging_get_current_page_directory_addr();
     paging_use_page_directory(new_page);
-    read(request);
+    int8_t ret = read(request);
     paging_use_page_directory(curr_dir);
+    if (ret != 0) {
+        for (uint32_t i = 0; i < page_frame_count_needed; i++) {
+            void* virtual_addr = new_pcb->memory.virtual_addr_used[i];
+            paging_free_user_page_frame(new_page, virtual_addr);
+        }
+
+        retcode = PROCESS_CREATE_FAIL_FS_READ_FAILURE;
+        goto exit_cleanup;
+    }
     
     new_pcb->memory.page_frame_used_count = page_frame_count_needed;
     new_pcb->context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;
