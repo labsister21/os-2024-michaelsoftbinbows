@@ -12,11 +12,11 @@ struct ProcessControlBlock _process_list[PROCESS_COUNT_MAX];
 int32_t current_pid = -1;
 
 int32_t process_list_get_inactive_index() {
-    return current_pid+1;
+    return process_manager_state.active_process_count;
 }
 
 uint32_t process_generate_new_pid(){
-    return ++process_manager_state.active_process_count;
+    return process_manager_state.active_process_count++;
 }
 
 uint32_t ceil_div(uint32_t numerator, uint32_t denominator) {
@@ -53,6 +53,11 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
         paging_allocate_user_page_frame(new_page, virtual_addr);
         new_pcb->memory.virtual_addr_used[i] = virtual_addr;
     }
+    struct PageDirectory *curr_dir = paging_get_current_page_directory_addr();
+    paging_use_page_directory(new_page);
+    read(request);
+    paging_use_page_directory(curr_dir);
+    
     new_pcb->memory.page_frame_used_count = page_frame_count_needed;
     new_pcb->context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;
     new_pcb->context.cpu.segment.ds = GDT_USER_DATA_SEGMENT_SELECTOR | 0x3;
@@ -76,8 +81,6 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     memset(new_pcb->metadata.nama,0,8);
     memcpy(new_pcb->metadata.nama, request.name, 8);
     // process_manager_state.active_process_count++;
-    paging_use_page_directory(new_page);
-    read(request);
 
     exit_cleanup:
     return retcode;

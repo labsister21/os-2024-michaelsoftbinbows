@@ -63,6 +63,11 @@ void main_interrupt_handler(struct InterruptFrame frame)
         break;
     case (0x30):
         syscall(frame);
+        break;
+    case (0xe):
+        int ALERT = 5;
+        ALERT++;
+        break;
     }
 }
 

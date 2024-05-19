@@ -92,6 +92,7 @@ bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void *virtu
     for(; i < PAGE_FRAME_MAX_COUNT && !found; ++i){
         if(!page_manager_state.page_frame_map[i]){
             found = 1;
+            break;
         }
     }
     if(!found){ // full memory
