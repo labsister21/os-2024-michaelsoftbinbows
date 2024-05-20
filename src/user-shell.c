@@ -180,6 +180,7 @@ void cd(){
 void ls(){
     struct FAT32DirectoryTable      cl   = {0};
     char args[MAX_CMD_LENGTH];
+    memset(args,0,MAX_CMD_LENGTH);
     uint8_t cmd_len = strlen(cmd_buffer);
     char saved_current_path[MAX_CMD_LENGTH];
     uint32_t saved_working_directory = working_directory;
@@ -239,7 +240,7 @@ void ls(){
         .buffer_size           = sizeof(struct FAT32DirectoryTable),
     };
     memcpy(request.name, real_name, 8);
-    int32_t retcode;
+    uint8_t retcode;
     syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
     if(retcode == 0){
         memcpy(real_name, ((struct FAT32DirectoryTable*)request.buf)->table[1].name, 8);
@@ -852,7 +853,7 @@ void findHelper(char* target,char* extension,int prev,char* local_current_path, 
     memcpy(request.name, real_name, 8);
     char slashN = '\n';
     char dot = '.';
-    int32_t retcode;
+    uint8_t retcode;
     retcode = 0;
     syscall(1, (uint32_t) &request, (uint32_t) &retcode, 0);
     if(retcode == 0){
@@ -897,9 +898,8 @@ void find(){
         struct FAT32DirectoryTable      cl   = {0};
         char local_current_path[128];
         memset(local_current_path,0,128);
-        strcpy(local_current_path,current_path);
+        memcpy(local_current_path,current_path,128);
 
-        
         char buf[MAX_CMD_LENGTH];
         memset(buf,0,MAX_CMD_LENGTH);
         char ext[4];
