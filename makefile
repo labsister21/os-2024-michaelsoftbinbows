@@ -31,20 +31,49 @@ inserter:
 user-shell:
 	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/crt0.s -o crt0.o
 	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/user-shell.c -o user-shell.o
+	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/testing.c -o testing.o
+	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/imm0.c -o imm0.o
+	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/clock.c -o clock.o
 	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/stdlib/string.c -o string.o
 	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=binary \
 		crt0.o user-shell.o string.o -o $(OUTPUT_FOLDER)/shell
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=binary \
+		crt0.o testing.o string.o -o $(OUTPUT_FOLDER)/testing
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=binary \
+		crt0.o imm0.o string.o -o $(OUTPUT_FOLDER)/imm0
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=binary \
+		crt0.o clock.o string.o -o $(OUTPUT_FOLDER)/clock
+
 	@echo Linking object shell object files and generate flat binary...
 	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=elf32-i386 \
 		crt0.o user-shell.o string.o -o $(OUTPUT_FOLDER)/shell_elf
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=elf32-i386 \
+	crt0.o testing.o string.o -o $(OUTPUT_FOLDER)/testing_elf
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=elf32-i386 \
+	crt0.o imm0.o string.o -o $(OUTPUT_FOLDER)/imm0_elf
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-linker.ld -melf_i386 --oformat=elf32-i386 \
+	crt0.o clock.o string.o -o $(OUTPUT_FOLDER)/clock_elf
+
 	@echo Linking object shell object files and generate ELF32 for debugging...
 	@size --target=binary $(OUTPUT_FOLDER)/shell
+	@size --target=binary $(OUTPUT_FOLDER)/testing
+	@size --target=binary $(OUTPUT_FOLDER)/clock
+	@size --target=binary $(OUTPUT_FOLDER)/imm0
 	@rm -f *.o
 
 
 insert-shell: inserter user-shell
 	@echo Inserting shell into root directory...
 	@cd $(OUTPUT_FOLDER); ./inserter shell 2 $(DISK_NAME).bin
+	@cd $(OUTPUT_FOLDER); ./inserter testing 2 $(DISK_NAME).bin
+	@cd $(OUTPUT_FOLDER); ./inserter clock 2 $(DISK_NAME).bin
+	@cd $(OUTPUT_FOLDER); ./inserter imm0 2 $(DISK_NAME).bin
 
 
 run: all
@@ -53,7 +82,7 @@ run: all
 all: build
 build: iso
 clean:
-	rm -rf *.o *.iso $(OUTPUT_FOLDER)/*.iso $(OUTPUT_FOLDER)/*.o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/inserter $(OUTPUT_FOLDER)/shell $(OUTPUT_FOLDER)/shell_elf $(OUTPUT_FOLDER)/*.bin
+	rm -rf *.o *.iso $(OUTPUT_FOLDER)/*.iso $(OUTPUT_FOLDER)/*.o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/inserter $(OUTPUT_FOLDER)/shell $(OUTPUT_FOLDER)/testing $(OUTPUT_FOLDER)/shell_elf $(OUTPUT_FOLDER)/testing_elf $(OUTPUT_FOLDER)/imm0_elf $(OUTPUT_FOLDER)/*.bin
 
 
 
@@ -76,6 +105,12 @@ kernel:
 	@$(CC) $(CFLAGS) $(SOURCE_FOLDER)/Keyboard/keyboard.c -o $(OUTPUT_FOLDER)/keyboard.o
 
 	@$(CC) $(CFLAGS) $(SOURCE_FOLDER)/Paging/paging.c -o $(OUTPUT_FOLDER)/paging.o
+
+	@$(CC) $(CFLAGS) $(SOURCE_FOLDER)/process/process.c -o $(OUTPUT_FOLDER)/process.o
+
+	@$(CC) $(CFLAGS) $(SOURCE_FOLDER)/scheduler/scheduler.c -o $(OUTPUT_FOLDER)/scheduler.o
+
+	@$(CC) $(CFLAGS) $(SOURCE_FOLDER)/cmos/cmos.c -o $(OUTPUT_FOLDER)/cmos.o
 
 	@$(LIN) $(LFLAGS) bin/*.o -o $(OUTPUT_FOLDER)/kernel
 	@echo Linking object files and generate elf32...

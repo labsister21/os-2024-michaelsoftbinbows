@@ -59,41 +59,51 @@
 #define IRQ_PRIMARY_ATA 14
 #define IRQ_SECOND_ATA 15
 
+// Timer Interrupt Stuff
+#define PIT_MAX_FREQUENCY   1193182
+#define PIT_TIMER_FREQUENCY 1000
+#define PIT_TIMER_COUNTER   (PIT_MAX_FREQUENCY / PIT_TIMER_FREQUENCY)
+
+#define PIT_COMMAND_REGISTER_PIO          0x43
+#define PIT_COMMAND_VALUE_BINARY_MODE     0b0
+#define PIT_COMMAND_VALUE_OPR_SQUARE_WAVE (0b011 << 1)
+#define PIT_COMMAND_VALUE_ACC_LOHIBYTE    (0b11  << 4)
+#define PIT_COMMAND_VALUE_CHANNEL         (0b00  << 6) 
+#define PIT_COMMAND_VALUE (PIT_COMMAND_VALUE_BINARY_MODE | PIT_COMMAND_VALUE_OPR_SQUARE_WAVE | PIT_COMMAND_VALUE_ACC_LOHIBYTE | PIT_COMMAND_VALUE_CHANNEL)
+
+#define PIT_CHANNEL_0_DATA_PIO 0x40
+
 /**
  * CPURegister, store CPU registers values.
- *
+ * 
  * @param index   CPU index register (di, si)
  * @param stack   CPU stack register (bp, sp)
  * @param general CPU general purpose register (a, b, c, d)
  * @param segment CPU extra segment register (gs, fs, es, ds)
  */
-struct CPURegister
-{
-    struct
-    {
+struct CPURegister {
+    struct {
         uint32_t edi;
         uint32_t esi;
     } __attribute__((packed)) index;
-    struct
-    {
-        uint32_t esp;
+    struct {
         uint32_t ebp;
+        uint32_t esp;
     } __attribute__((packed)) stack;
-    struct
-    {
+    struct {
         uint32_t ebx;
         uint32_t edx;
         uint32_t ecx;
         uint32_t eax;
     } __attribute__((packed)) general;
-    struct
-    {
+    struct {
         uint32_t gs;
         uint32_t fs;
         uint32_t es;
         uint32_t ds;
     } __attribute__((packed)) segment;
 } __attribute__((packed));
+
 
 /**
  * InterruptStack, data pushed by CPU when interrupt / exception is raised.
@@ -176,5 +186,7 @@ struct TSSEntry
 void set_tss_kernel_current_stack(void);
 
 void syscall(struct InterruptFrame);
+
+void activate_timer_interrupt(void);
 
 #endif

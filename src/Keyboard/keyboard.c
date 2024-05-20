@@ -151,3 +151,81 @@ void clear_screen(){
   keyboard_state.cursorColumn = 0;
   keyboard_state.cursorRow = -1;
 }
+
+void testing(char c){
+  framebuffer_write(0,64,'e'+c,0xC,0);
+  framebuffer_write(0,65,'n'+c,0xC,0);
+  framebuffer_write(0,66,'d'+c,0xC,0);
+  framebuffer_write(0,67,' '+c,0xC,0);
+  framebuffer_write(0,68,'m'+c,0xC,0);
+  framebuffer_write(0,69,'y'+c,0xC,0);
+  framebuffer_write(0,70,' '+c,0xC,0);
+  framebuffer_write(0,71,'s'+c,0xC,0);
+  framebuffer_write(0,72,'u'+c,0xC,0);
+  framebuffer_write(0,73,'f'+c,0xC,0);
+  framebuffer_write(0,74,'f'+c,0xC,0);
+  framebuffer_write(0,75,'e'+c,0xC,0);
+  framebuffer_write(0,76,'r'+c,0xC,0);
+  framebuffer_write(0,77,'i'+c,0xC,0);
+  framebuffer_write(0,78,'n'+c,0xC,0);
+  framebuffer_write(0,79,'g'+c,0xC,0);
+}
+
+char intToChar[]= {'0','1','2','3','4','5','6','7','8','9'};
+
+void printDigits(uint8_t number,uint8_t colPrint) {
+    // Calculate the number of digits
+    if(number != 0){
+    int temp = number;
+    int divisor = 1;
+    while (temp > 9) {
+        divisor *= 10;
+        temp /= 10;
+    }
+
+    // Print each digit
+    if(number > 9){
+    while (divisor > 0) {
+        int digit = number / divisor;
+        framebuffer_write(24,colPrint,intToChar[digit],0xA,0);
+        number %= divisor;
+        divisor /= 10;
+        colPrint++;
+    }
+    } else {
+      framebuffer_write(24,colPrint,intToChar[number],0xA,0);
+      framebuffer_write(24,colPrint+1,' ',0xA,0);
+    }
+     
+    } else{
+      framebuffer_write(24,colPrint,intToChar[0],0xA,0);
+      framebuffer_write(24,colPrint+1,' ',0xA,0);
+    }
+
+}
+
+void writeClock(uint8_t jam, uint8_t menit, uint8_t detik){
+  if(jam<=9){
+    framebuffer_write(24,72,'0',0xA,0);
+    printDigits(jam,73);
+  }
+  else{
+    printDigits(jam,72);
+  }
+  framebuffer_write(24,74,':',0xA,0);
+  if(menit<=9){
+    framebuffer_write(24,75,'0',0xA,0);
+    printDigits(menit,76);
+  }
+  else{
+    printDigits(menit,75);
+  }
+  framebuffer_write(24,77,':',0xA,0);
+  if(detik<=9){
+    framebuffer_write(24,78,'0',0xA,0);
+    printDigits(detik,79);
+  }
+  else{
+    printDigits(detik,78);
+  }
+}

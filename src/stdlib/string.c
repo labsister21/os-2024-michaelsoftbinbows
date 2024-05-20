@@ -17,6 +17,29 @@ void* memcpy(void* restrict dest, const void* restrict src, size_t n) {
     return dstbuf;
 }
 
+void namecpy(char* dest, const char* src, size_t n) {
+    size_t i;
+    for (i = 0; i < n && src[i] != '.'; i++) {
+        dest[i] = src[i];
+    }
+    dest[i] = '\0';
+}
+
+void extcpy(char* dest, const char* src, size_t n) {
+    size_t dot_index = 0;
+    while (src[dot_index] && src[dot_index] != '.') {
+        dot_index++;
+    }
+    if (src[dot_index] == '.') {
+        dot_index++;
+    }
+    size_t i;
+    for (i = 0; i < n && src[dot_index + i]; i++) {
+        dest[i] = src[dot_index + i];
+    }
+    dest[i] = '\0';
+}
+
 int memcmp(const void *s1, const void *s2, size_t n) {
     const uint8_t *buf1 = (const uint8_t*) s1;
     const uint8_t *buf2 = (const uint8_t*) s2;

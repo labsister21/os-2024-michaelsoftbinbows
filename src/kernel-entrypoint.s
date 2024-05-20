@@ -107,3 +107,43 @@ set_tss_register:
     mov ax, 0x28 | 0 ; GDT TSS Selector, ring 0
     ltr ax
     ret
+
+global process_context_switch
+; Load struct Context (CPU GP-register) then jump
+; Function Signature: void process_context_switch(struct Context ctx);
+process_context_switch:
+    mov gs, word [esp+36]
+    mov fs, word [esp+40]
+    mov es, word [esp+44]
+    mov ds, word [esp+48]
+
+    ; Using iret (return instruction for interrupt) technique for privilege change
+    ; Stack values will be loaded into these register:
+    ; [esp] -> eip, [esp+4] -> cs?, [esp+8] -> eflags, [] -> process esp, [] -> process ss?
+    lea  ecx, [esp+0x04] ; Save the base address for struct Context ctx
+    mov  eax, 0x20 | 0x3 ; some requirement for stack manipulation (why 23?)
+    push eax ; Stack segment selector (GDT_USER_DATA_SELECTOR), user privilege
+    mov  eax, [ecx+12] ; esp
+    ; sub  eax, 0x04
+    push eax ; User space stack pointer (esp), move it into last 4 MiB
+    mov  eax, [ecx+52]
+    push eax ; eflags register state, when jump inside user program
+    mov  eax, 0x18 | 0x3 ; not sure what to put here
+    push eax ; Code segment selector (GDT_USER_CODE_SELECTOR), user privilege
+    mov  eax, [ecx+48]
+    push eax ; eip register to jump back
+
+    ; [ecx+12] ; esp
+    ; [ecx+52] ; eflags
+    ; [ecx+48] ; eip
+
+    ; Load register from ctx
+    mov edi, [ecx+0] ; edi
+    mov esi, [ecx+4] ; esi
+    mov ebp, [ecx+8] ; ebp
+    mov ebx, [ecx+16] ; ebx
+    mov edx, [ecx+20] ; edx
+    mov ecx, [ecx+24] ; ecx
+    mov eax, [ecx+28] ; eax
+
+    iret

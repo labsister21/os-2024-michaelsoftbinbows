@@ -13,6 +13,9 @@
         "keyboard.h": "c",
         "framebuffer.h": "c",
         "user-shell.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "testing.h": "c",
+        "cmos.h": "c",
+        "clock.h": "c"
     },
 }
