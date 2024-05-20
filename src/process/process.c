@@ -84,6 +84,7 @@ int32_t process_create_user_process(struct FAT32DriverRequest request) {
     new_pcb->context.cpu.segment.gs = GDT_USER_DATA_SEGMENT_SELECTOR | 0x3;
     new_pcb->context.cpu.stack.esp = PAGE_FRAME_SIZE;
 
+    new_pcb->context.eip = 0x0;
     new_pcb->context.cpu.index.edi = 0;
     new_pcb->context.cpu.index.esi = 0;
     new_pcb->context.cpu.stack.ebp = 0;
