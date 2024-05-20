@@ -162,14 +162,18 @@ uint8_t multiple_cd(char* path, uint8_t len_path){
 
 void cd(){
     uint8_t cmd_len = strlen(cmd_buffer);
+    if(cmd_len == 2 || cmd_len == 3){
+        syscall(6, (uint32_t) "No arguments!", 12, 0xC);
+        return;
+    }
     char mult_path[MAX_CMD_LENGTH];
     memset(mult_path, 0, MAX_CMD_LENGTH);
     memcpy(mult_path, (void*)cmd_buffer + 3, cmd_len - 3);
     uint8_t ret = multiple_cd(mult_path, cmd_len - 3);
     if(ret != 0){
-        syscall(6, (uint32_t) "cd failed", 9, 0xC);
+        syscall(6, (uint32_t) "Change dir failed", 17, 0xC);
     }else{
-        syscall(6, (uint32_t) "cd success", 10, 0xA);
+        syscall(6, (uint32_t) "Change dir success!", 19, 0xA);
     }
 }
 
@@ -274,7 +278,7 @@ void mkdir(){
     char name[MAX_CMD_LENGTH];
     uint8_t cmd_len = strlen(cmd_buffer);
 
-    if(cmd_len == 5){
+    if(cmd_len == 5 || cmd_len == 6){
         syscall(6, (uint32_t) "No arguments!", 12, 0xC);
         return;
     }
@@ -335,7 +339,7 @@ void mkdir(){
     int8_t retcode;
     syscall(2, (uint32_t) &request, (uint32_t) &retcode, 0);
     if (retcode == 0) {
-        syscall(6, (uint32_t) "Write success", 13, 0xA);
+        syscall(6, (uint32_t) "Write success!", 13, 0xA);
     }else{
         syscall(6, (uint32_t) "Write failed", 12, 0xC);
     }
@@ -349,11 +353,16 @@ void mkdir(){
 
 void cpCaller()
 {
+    uint8_t cmd_len = strlen(cmd_buffer);
+    if(cmd_len == 2 || cmd_len == 3){
+        syscall(6, (uint32_t) "No arguments!", 12, 0xC);
+        return;
+    }
     int retcode = cp();
     switch (retcode)
     {
     case 0:
-        syscall(6, (uint32_t) "Copy success", 13, 0xA);
+        syscall(6, (uint32_t) "Copy success!", 13, 0xA);
         break;
     case 1:
         syscall(6, (uint32_t) "Read dir failed", 16, 0xC);
@@ -378,6 +387,7 @@ void cpCaller()
 
 int cp(){
     char buf[MAX_CMD_LENGTH];
+    
     memset(buf, 0, MAX_CMD_LENGTH);
     memcpy(buf, (void*)cmd_buffer+3, cur_cmd_length-3);
     int i = 0;
@@ -574,7 +584,7 @@ void cat(){
 
     uint8_t cmd_len = strlen(cmd_buffer);
 
-    if(cmd_len == 3){
+    if(cmd_len == 3 || cmd_len == 4){
         syscall(6, (uint32_t) "No arguments!", 12, 0xC);
         return;
     }
@@ -708,14 +718,19 @@ int32_t rm()
 
 void rmCaller()
 {
+    uint8_t cmd_len = strlen(cmd_buffer);
+    if(cmd_len == 2 || cmd_len == 3){
+        syscall(6, (uint32_t) "No arguments!", 12, 0xC);
+        return;
+    }
     int retcode = rm();
     if (retcode == 0)
     {
-        syscall(6, (uint32_t) "Delete Succeeded !!! ", 21, 0xA);
+        syscall(6, (uint32_t) "Delete success!", 15, 0xA);
     }
     else if (retcode == 1)
     {
-        syscall(6, (uint32_t) "File/Folder Not Found ", 22, 0xC);
+        syscall(6, (uint32_t) "File/folder not found ", 22, 0xC);
     }
     else if (retcode == 2)
     {
@@ -730,10 +745,15 @@ void rmCaller()
 void mv()
 {
     // what the fuck?
+    uint8_t cmd_len = strlen(cmd_buffer);
+    if(cmd_len == 2 || cmd_len == 3){
+        syscall(6, (uint32_t) "No arguments!", 12, 0xC);
+        return;
+    }
     int cpRetcode = cp();
     if (cpRetcode == 0){
         rm();
-        syscall(6, (uint32_t) "move success!", 14, 0xA);
+        syscall(6, (uint32_t) "Move success!", 14, 0xA);
     }
     else{
         switch (cpRetcode)
@@ -854,10 +874,6 @@ void testing(){
     syscall(666,0,0,0);
 }
 
-void testing2(){
-    syscall(667,0,0,0);
-}
-
 void execute()
 {
     char command[MAX_CMD_LENGTH];
@@ -910,13 +926,10 @@ void execute()
     }else if(cmd_length == 4 && memcmp(command, "kill", 4) == 0){
         kill();
     }
-    else if(cmd_length == 3 && memcmp(command, "wow", 3) == 0){
+    else if(cmd_length == 10 && memcmp(command, "motivation", 10) == 0){
         testing();
-    }
-    else if(cmd_length == 5 && memcmp(command, "clock", 5) == 0){
-        testing2();
-    }else{
-
+    } else{
+        syscall(6, (uint32_t) "Command not found", 17, 0xC);
     }
     memset(cmd_buffer, 0, MAX_CMD_LENGTH);
     char slashN = '\n';
@@ -1048,6 +1061,12 @@ void find_file(char *name, struct FAT32DirectoryTable dir_table) {
 
 void exec() {
     char buf[MAX_CMD_LENGTH];
+    uint8_t cmd_len = strlen(cmd_buffer);
+    
+    if(cmd_len == 4 || cmd_len == 5){
+        syscall(6, (uint32_t) "No arguments!", 12, 0xC);
+        return;
+    }
     memset(buf, 0, MAX_CMD_LENGTH);
     memcpy(buf, (void*)cmd_buffer+5, cur_cmd_length-5);
     
@@ -1095,7 +1114,7 @@ void exec() {
     switch (retcode)
     {
     case 0:
-        syscall(6, (uint32_t) "Exec success", 12, 0xA);
+        syscall(6, (uint32_t) "Exec success!", 12, 0xA);
         break;
     case 1:
         syscall(6, (uint32_t) "Max process exceeded", 21, 0xC);
@@ -1129,7 +1148,7 @@ void kill() {
     syscall(11, (uint32_t) pid, (uint32_t) &retcode, 0);
 
     if (retcode == 0) {
-        syscall(6, (uint32_t) "Kill success", 12, 0xA);
+        syscall(6, (uint32_t) "Kill success!", 12, 0xA);
     } else {
         syscall(6, (uint32_t) "Kill failed", 12, 0xC);
     }
