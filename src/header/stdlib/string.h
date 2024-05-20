@@ -52,4 +52,18 @@ int memcmp(const void *s1, const void *s2, size_t n);
 */
 void *memmove(void *dest, const void *src, size_t n);
 
+char *strcat(char *dest, const char *src);
+
+void *strcpy(char *dest, const char *src);
+
+int strlen(const char* str);
+
+int strcmp(const char *str1, const char *str2);
+
+int strstr(const char* haystack, const char* needle);
+
+void namecpy(char* dest, const char* src, size_t n);
+
+void extcpy(char* dest, const char* src, size_t n);
+
 #endif

@@ -32,11 +32,44 @@
                     "description": "Get kernel symbols"
                 },
                 {
+                    "text": "add-symbol-file shell_elf",
+                    "description": "Get shell symbols"
+                },            
+                {
                     "text": "set output-radix 16",
                     "description": "Use hexadecimal output"
                 }
             ],
             "avoidWindowsConsoleRedirection": true
         },
+        {
+            "name": "Inserter",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/inserter",
+            "args": ["shell", "2", "storage.bin"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin",
+            "environment": [],
+            "preLaunchTask": "Build Inserter",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                },
+                {
+                    "text": "set output-radix 16",
+                    "description": "Use hexadecimal output"
+                },
+            ]
+        }
     ]
 }
