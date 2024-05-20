@@ -153,7 +153,22 @@ void clear_screen(){
 }
 
 void testing(char c){
-  framebuffer_write(24,79,c,0xA,0);
+  framebuffer_write(0,64,'e'+c,0xC,0);
+  framebuffer_write(0,65,'n'+c,0xC,0);
+  framebuffer_write(0,66,'d'+c,0xC,0);
+  framebuffer_write(0,67,' '+c,0xC,0);
+  framebuffer_write(0,68,'m'+c,0xC,0);
+  framebuffer_write(0,69,'y'+c,0xC,0);
+  framebuffer_write(0,70,' '+c,0xC,0);
+  framebuffer_write(0,71,'s'+c,0xC,0);
+  framebuffer_write(0,72,'u'+c,0xC,0);
+  framebuffer_write(0,73,'f'+c,0xC,0);
+  framebuffer_write(0,74,'f'+c,0xC,0);
+  framebuffer_write(0,75,'e'+c,0xC,0);
+  framebuffer_write(0,76,'r'+c,0xC,0);
+  framebuffer_write(0,77,'i'+c,0xC,0);
+  framebuffer_write(0,78,'n'+c,0xC,0);
+  framebuffer_write(0,79,'g'+c,0xC,0);
 }
 
 char intToChar[]= {'0','1','2','3','4','5','6','7','8','9'};
@@ -190,38 +205,27 @@ void printDigits(uint8_t number,uint8_t colPrint) {
 }
 
 void writeClock(uint8_t jam, uint8_t menit, uint8_t detik){
-  //uint8_t row, uint8_t col, char c, uint8_t fg, uint8_t bg
-  // char firstHour;
-  // char secondHour;
-
-  // char firstMinute;
-  // char secondMinute;
-
-  // char firstSecond;
-  // char secondSecond;
-
-  // //determine characters
-  // if(jam <10){
-  //   firstHour = '0';
-  //   secondHour =
-  // } else {
-
-  // }
-  // //print jam
-  // framebuffer_write(24,72,firstHour,0xA,0);
-  // framebuffer_write(24,73,secondHour,0xA,0);
-  // framebuffer_write(24,74,':',0xA,0);
-  // //print menit
-  // framebuffer_write(24,75,firstMinute,0xA,0);
-  // framebuffer_write(24,76,secondMinute,0xA,0);
-  // framebuffer_write(24,77,':',0xA,0);
-  // //print detik
-  // framebuffer_write(24,78,firstSecond,0xA,0);
-  // framebuffer_write(24,79,secondSecond,0xA,0);
-
-  printDigits(jam,72);
+  if(jam<=9){
+    framebuffer_write(24,72,'0',0xA,0);
+    printDigits(jam,73);
+  }
+  else{
+    printDigits(jam,72);
+  }
   framebuffer_write(24,74,':',0xA,0);
-  printDigits(menit,75);
+  if(menit<=9){
+    framebuffer_write(24,75,'0',0xA,0);
+    printDigits(menit,76);
+  }
+  else{
+    printDigits(menit,75);
+  }
   framebuffer_write(24,77,':',0xA,0);
-  printDigits(detik,78);
+  if(detik<=9){
+    framebuffer_write(24,78,'0',0xA,0);
+    printDigits(detik,79);
+  }
+  else{
+    printDigits(detik,78);
+  }
 }
