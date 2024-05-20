@@ -675,7 +675,7 @@ void cat(){
             if(uwu == 0) break;
             len++;
         }
-        syscall(6, (uint32_t)clb[0].buf, len, 0xF);
+        syscall(6, (uint32_t)clb[0].buf, len, 0x6);
     }
     if(arg_exist){
         memset(current_path, 0, MAX_CMD_LENGTH);
