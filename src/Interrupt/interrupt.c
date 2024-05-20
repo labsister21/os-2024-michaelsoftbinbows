@@ -134,25 +134,7 @@ void syscall(struct InterruptFrame frame) {
             }
             break;
         case 10: // terminasi proses
-            if (_process_list[current_pid].metadata.state == Inactive) {
-                break;
-            }
-            struct ProcessControlBlock* target_pcb = &_process_list[current_pid];
-            for (uint32_t i = 0; i < target_pcb->memory.page_frame_used_count; i++) {
-                void* virtual_addr = target_pcb->memory.virtual_addr_used[i];
-                paging_free_user_page_frame(target_pcb->context.page_directory_virtual_addr, virtual_addr);
-            }
-            if (!paging_free_page_directory(target_pcb->context.page_directory_virtual_addr)) {
-                for (uint32_t i = 0; i < target_pcb->memory.page_frame_used_count; i++) { // cancel free user page frame
-                    void* virtual_addr = (void*) (i * PAGE_FRAME_SIZE);
-                    paging_allocate_user_page_frame(target_pcb->context.page_directory_virtual_addr, virtual_addr);
-                    target_pcb->memory.virtual_addr_used[i] = virtual_addr;
-                }
-                break;
-            };
-            target_pcb->metadata.state = Inactive;
-            process_manager_state.active_process_count--;
-            scheduler_switch_to_next_process();
+            // exit(0);
             break;
         case 11:
             char buf[2];

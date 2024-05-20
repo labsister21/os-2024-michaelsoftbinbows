@@ -13,13 +13,10 @@ void syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx)
 
 int main(){
     int i = 0;
-    while(i<10000){
+    while(true){
         syscall(420,'0'+i,0,0);
         i++;
-        // i = i%10;
-        for (int delay = 0; delay < 100000; delay++) {
-            // Do nothing in loop
-        }
+        i = i%10;
     }
     return 0;
 }
