@@ -561,16 +561,16 @@ int cp(){
         }
     }
     else {
-        // return path & directory to normal
-        memcpy(current_path, save_path, MAX_CMD_LENGTH);
-        working_directory = save_directory;
-
         request.parent_cluster_number = working_directory;
         memcpy(request.name, dest_name, 8);
         memcpy(request.ext, dest_ext, 3);
         uint8_t ret;
         syscall(2, (uint32_t) &request, (uint32_t) &ret, 0);
 
+        // return path & directory to normal
+        memcpy(current_path, save_path, MAX_CMD_LENGTH);
+        working_directory = save_directory;
+        
         if (ret != 0) {
             return 5;
         }
