@@ -49,6 +49,7 @@ void main_interrupt_handler(struct InterruptFrame frame)
     switch (frame.int_number)
     {
     case (0x20):
+        ;
         struct Context cur_context;
         cur_context.cpu = frame.cpu;
         cur_context.eflags = frame.int_stack.eflags;
@@ -66,6 +67,7 @@ void main_interrupt_handler(struct InterruptFrame frame)
         syscall(frame);
         break;
     case (0xe):
+        ;
         int ALERT = 5;
         ALERT++;
         break;
@@ -134,9 +136,14 @@ void syscall(struct InterruptFrame frame) {
             }
             break;
         case 10: // terminasi proses
-            // exit(0);
+            ;
+            struct ProcessControlBlock* cur_pcb = process_get_current_running_pcb_pointer();
+            paging_use_page_directory(_process_list[0].context.page_directory_virtual_addr); // use shell page dir
+            process_destroy(cur_pcb->metadata.pid);
+            scheduler_switch_to_next_process();
             break;
         case 11:
+            ;
             char buf[2];
             memset(buf,0,2);
             memcpy(buf,(char*) frame.cpu.general.ebx,2);
@@ -173,6 +180,7 @@ void syscall(struct InterruptFrame frame) {
             testing(*((char*)frame.cpu.general.ebx));
             break;
         case 666:
+            ;
             struct FAT32DriverRequest request = {
             .buf                   = (uint8_t*) 0,
             .name                  = "testing",
