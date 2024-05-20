@@ -156,7 +156,7 @@ make run
 6. rm
 7. mv
 8. find
-9. clock
+9. exec
 
 ## Acknowledgements
 
