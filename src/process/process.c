@@ -149,6 +149,7 @@ bool process_destroy(uint32_t pid) {
         return false;
     };
     target_pcb->metadata.state = Inactive;
+    process_manager_state.active_process_count--;
     return true;
 }
 
