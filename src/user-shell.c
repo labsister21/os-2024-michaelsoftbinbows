@@ -686,33 +686,74 @@ void cat(){
 
 int32_t rm()
 {
-    // struct ClusterBuffer cl[2];
+    char buf[MAX_CMD_LENGTH];
+    
+    memset(buf, 0, MAX_CMD_LENGTH);
+    memcpy(buf, (void*)cmd_buffer+3, cur_cmd_length-3);
+
+    // parse for file path, name, and ext
+    int i = 0;
+    char path[MAX_CMD_LENGTH];
+    memset(path, 0, MAX_CMD_LENGTH);
+    for(int j=0; j < MAX_CMD_LENGTH && buf[i] != ' ' && buf[i] != '\0'; j++, i++){ 
+        if (buf[i] == '.') {
+            if (i < MAX_CMD_LENGTH && buf[i+1] == '.') {
+                path[j] = buf[i];
+                j++;
+                i++;
+            }
+            else break;
+        }
+        path[j] = buf[i];
+    } 
+    path[i+1] = '\0';
+    i++;
+    char file_ext[3];
+    memset(file_ext, 0, 3);
+    for(int j=0; j < 3 && buf[i] != ' ' && buf[i] != '\0'; j++, i++){
+        file_ext[j] = buf[i];
+    }
+    if (strlen(file_ext) == 0) {
+        return 6;
+    }
+
+    char file_name[8];
+    memset(file_name,0,8);
+    int j = strlen(path);
+    for(; j > 0; j--){
+        if (path[j] == '/') break;
+    }
+    if (j != 0) j++;
+    path[j-1] = '\0';
+    for (int k=0; k < 8 && path[j] != '\0'; j++, k++) {
+        file_name[k] = path[j];
+        path[j] = '\0';
+    }
+    
+    uint32_t save_directory = working_directory;
+    char save_path[MAX_CMD_LENGTH];
+    memset(save_path, 0, MAX_CMD_LENGTH);
+    memcpy(save_path, current_path, MAX_CMD_LENGTH);
+
+    // cd to intended src path
+    uint8_t retcode = multiple_cd(path,strlen(path));
+    if (retcode != 0) {
+        memcpy(current_path, save_path, MAX_CMD_LENGTH);
+        working_directory = save_directory;
+        return 1; 
+    }
+
     struct FAT32DriverRequest request = {
-        .name = "\0\0\0\0\0\0\0",
-        .ext = "\0\0",
+        .name                  = "\0\0\0\0\0\0\0",
+        .ext                   = "\0\0",
         .parent_cluster_number = working_directory,
     };
-    int nameLen = 0;
-    char *itr = (char *)cmd_buffer + 3;
-    for (int i = 0; i < strlen(itr); i++)
-    {
-        if (itr[i] == '.')
-        {
-            // identifies what's the extension for the file is
-            // breaks from the loop
-            request.ext[0] = itr[i + 1];
-            request.ext[1] = itr[i + 2];
-            request.ext[2] = itr[i + 3];
-            break;
-        }
-        else
-        {
-            nameLen++;
-        }
-    }
-    memcpy(request.name, (void *)(cmd_buffer + 3), nameLen);
-    int32_t retcode;
+    memcpy(request.name, file_name, 8);
+    memcpy(request.ext, file_ext, 3);
+    retcode = 3;
     syscall(3, (uint32_t)&request, (uint32_t)&retcode, 0);
+    memcpy(current_path, save_path, MAX_CMD_LENGTH);
+    working_directory = save_directory;
     return retcode;
 }
 

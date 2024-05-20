@@ -162,15 +162,15 @@ void syscall(struct InterruptFrame frame) {
         case 19:
             change_keyboard_template_length(*(uint8_t*)frame.cpu.general.ebx);
             break;
-        case 420:
-            testing(*((char*)frame.cpu.general.ebx));
-            break;
         case 69:
             clear_screen();
             break;
         case 78:
             read_rtc();
             writeClock((hourc + 7)%24, minutec, secondc);
+            break;
+        case 420:
+            testing(*((char*)frame.cpu.general.ebx));
             break;
         case 666:
             struct FAT32DriverRequest request = {
