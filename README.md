@@ -42,7 +42,7 @@ Template dasar untuk IF2230 - Sistem Operasi 2024
     </tr>
         <tr>
         <td>4.</td>
-        <td>M. Hanief Fatkhan Nashrull</td>
+        <td>M. Hanief Fatkhan Nashrullah</td>
         <td>13522100</td>
     </tr>
 </table>
