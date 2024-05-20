@@ -823,7 +823,7 @@ void mv()
 }
 
 
-void findHelper(char* target,int prev,char* local_current_path, uint32_t local_working_directory, struct FAT32DirectoryTable cl){
+void findHelper(char* target,char* extension,int prev,char* local_current_path, uint32_t local_working_directory, struct FAT32DirectoryTable cl){
     char real_name[8];
     int8_t i;
     uint8_t current_path_length = strlen(local_current_path);
@@ -869,7 +869,7 @@ void findHelper(char* target,int prev,char* local_current_path, uint32_t local_w
                     int k;
                     for (k = 0; target[k] != '\0'; k++) {slash_target[k + 1] = target[k];}
                     slash_target[k + 1] = '/'; slash_target[k + 2] = '\0';
-                    if( strcmp(cl.table[i].name,target)|| strstr(local_current_path,slash_target) || strlen(target)==0){
+                    if((strcmp(cl.table[i].name,target) && strcmp(cl.table[i].ext,extension))|| strstr(local_current_path,slash_target) || strlen(target)==0){
                     char* trimmed_current_path = &local_current_path[prev];
                     syscall(6, (uint32_t)"./", j, 0x9);
                     syscall(6, (uint32_t)trimmed_current_path, strlen(trimmed_current_path), 0x9);
@@ -886,7 +886,7 @@ void findHelper(char* target,int prev,char* local_current_path, uint32_t local_w
                 strcat(path,local_current_path);
                 strcat(path,cl.table[i].name);
                 strcat(path,"/");
-                findHelper(target,prev,path,local_working_directory,cl);
+                findHelper(target,extension,prev,path,local_working_directory,cl);
                 memset(path,0,MAX_CMD_LENGTH);
             }
         }
@@ -902,11 +902,14 @@ void find(){
         
         char buf[MAX_CMD_LENGTH];
         memset(buf,0,MAX_CMD_LENGTH);
+        char ext[4];
+        memset(ext,0,4);
         if(strlen(cmd_buffer)>5){
-            memcpy(buf, (void*)cmd_buffer+5, cur_cmd_length-5);
+            namecpy(buf, (void*)cmd_buffer+5, cur_cmd_length-5);
+            extcpy(ext, (void*)cmd_buffer+5, cur_cmd_length-5);
         }
         int current_path_length = strlen(local_current_path); 
-        findHelper(buf,current_path_length,local_current_path,working_directory,cl);
+        findHelper(buf,ext,current_path_length,local_current_path,working_directory,cl);
 }
 
 void clear(){
