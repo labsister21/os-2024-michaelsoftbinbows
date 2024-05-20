@@ -723,8 +723,10 @@ int32_t rm()
     for(; j > 0; j--){
         if (path[j] == '/') break;
     }
-    if (j != 0) j++;
-    path[j-1] = '\0';
+    if (j != 0) {
+        j++;
+        path[j-1] = '\0';
+    }
     for (int k=0; k < 8 && path[j] != '\0'; j++, k++) {
         file_name[k] = path[j];
         path[j] = '\0';
