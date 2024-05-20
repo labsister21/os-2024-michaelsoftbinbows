@@ -47,8 +47,6 @@ Template dasar untuk IF2230 - Sistem Operasi 2024
     </tr>
 </table>
 
-## Table of Contents
-
 ## Preface
 
 ![](Binbows.png)
