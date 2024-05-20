@@ -168,6 +168,10 @@ void syscall(struct InterruptFrame frame) {
         case 69:
             clear_screen();
             break;
+        case 78:
+            read_rtc();
+            writeClock((hourc + 7)%24, minutec, secondc);
+            break;
         case 666:
             struct FAT32DriverRequest request = {
             .buf                   = (uint8_t*) 0,
