@@ -160,7 +160,7 @@ make run
 
 ## Acknowledgements
 
-1. Tuham Yang maha Esa
+1. Tuhan Yang Maha Esa
 2. Kakak-Tachi di Lab Sister yang sudah membantu
 3. Teman - teman yang Bersemangat Mengerjakan
 
